@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDN Incident Alert Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11pt;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .ttp-entry, .objective-entry, .observable-entry, .sub-narrative-entry, .recommendation-entry {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .add-button {
+            background-color: #2ecc71;
+        }
+        .add-button:hover {
+            background-color: #27ae60;
+        }
+        .remove-button {
+            background-color: #e74c3c;
+        }
+        .remove-button:hover {
+            background-color: #c0392b;
+        }
+        .tabs {
+            overflow: hidden;
+            background-color: #f1f1f1;
+            margin-bottom: 20px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tabs button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            color: #555;
+            border-radius: 0;
+            margin: 0;
+        }
+        .tabs button:hover {
+            background-color: #ddd;
+        }
+        .tabs button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            background-color: #fff;
+        }
+        .preview {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            background-color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        #preview-content {
+            background-color: white;
+            color: black;
+            padding: 20px;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11pt;
+        }
+        .preview-template {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            color: black;
+        }
+        .preview-template table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 0;
+            border: none;
+        }
+        .preview-template td {
+            vertical-align: top;
+            padding: 10px;
+            color: black;
+            border: none;
+        }
+        .header-row {
+            background-color: #4472C4;
+            color: white;
+            font-weight: bold;
+        }
+        #pdf-output {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>CDN Incident Alert Generator</h1>
+
+    <form id="incidentForm">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'form-tab')">Input Form</button>
+            </div>
+
+        <div id="form-tab" class="tab-content" style="display: block;">
+            <div class="section">
+                <h2>Header Information</h2>
+                <label for="incidentNumber" class="required">Incident Number:</label>
+                <input type="text" id="incidentNumber" name="incidentNumber" placeholder="e.g., 0001" value="0001">
+
+                <label for="tlpLevel" class="required">TLP Level:</label>
+                <select id="tlpLevel" name="tlpLevel">
+                    <option value="TLP: RED">TLP: RED</option>
+                    <option value="TLP: AMBER+STRICT">TLP: AMBER+STRICT</option>
+                    <option value="TLP: AMBER">TLP: AMBER</option>
+                    <option value="TLP: GREEN">TLP: GREEN</option>
+                    <option value="TLP: CLEAR" selected>TLP: CLEAR</option>
+                </select>
+
+                <label for="country" class="required">Country/Region:</label>
+                <select id="country" name="country">
+                    <option value="AL">AL</option>
+                    <option value="AT">AT</option>
+                    <option value="BE">BE</option>
+                    <option value="BA">BA</option>
+                    <option value="BG">BG</option>
+                    <option value="HR">HR</option>
+                    <option value="CY">CY</option>
+                    <option value="CZ">CZ</option>
+                    <option value="DK">DK</option>
+                    <option value="EE">EE</option>
+                    <option value="EU">EU</option>
+                    <option value="FI">FI</option>
+                    <option value="FR">FR</option>
+                    <option value="GE">GE</option>
+                    <option value="GB">GB</option>
+                    <option value="DE" selected>DE</option>
+                    <option value="EL">EL</option>
+                    <option value="GR">GR</option>
+                    <option value="HU">HU</option>
+                    <option value="IS">IS</option>
+                    <option value="IE">IE</option>
+                    <option value="IT">IT</option>
+                    <option value="XK">XK</option>
+                    <option value="LV">LV</option>
+                    <option value="LI">LI</option>
+                    <option value="LT">LT</option>
+                    <option value="LU">LU</option>
+                    <option value="MT">MT</option>
+                    <option value="MD">MD</option>
+                    <option value="ME">ME</option>
+                    <option value="NL">NL</option>
+                    <option value="MK">MK</option>
+                    <option value="NO">NO</option>
+                    <option value="PL">PL</option>
+                    <option value="PT">PT</option>
+                    <option value="RO">RO</option>
+                    <option value="RS">RS</option>
+                    <option value="SK">SK</option>
+                    <option value="SI">SI</option>
+                    <option value="ES">ES</option>
+                    <option value="SE">SE</option>
+                    <option value="CH">CH</option>
+                    <option value="TR">TR</option>
+                    <option value="UA">UA</option>
+                    <option value="UK">UK</option>
+                </select>
+
+                <label for="title" class="required">Title:</label>
+                <input type="text" id="title" name="title" placeholder="Title of the incident alert" value="">
+
+                <label for="date" class="required">Date:</label>
+                <input type="text" id="date" name="date" placeholder="DD/MM/YYYY" value="28/06/2021">
+            </div>
+
+            <div class="section">
+                <h2>Summary</h2>
+                <p class="help-text">Write a concise summary of the incident (1-2 sentences each for incident, narrative, impact, DISARM TTPs, and recommendations)</p>
+                <textarea id="summary" name="summary" placeholder="Write a summary...">- Summary of incident - 1-2 sentences
+- Summary of narrative - 1 sentence
+- Summary of impact
+- Summary of DISARM TTPs
+- Summary of recommendations.</textarea>
+            </div>
+
+            <div class="section">
+                <h2>Incident</h2>
+                <p class="help-text">Describe when, who did what, to say what, to whom, and why.</p>
+                <textarea id="incident" name="incident" placeholder="Describe the scope of what you found..."></textarea>
+            </div>
+
+            <div class="section">
+                <h2>Narrative</h2>
+                <label for="metaNarrative">Meta Narrative:</label>
+                <textarea id="metaNarrative" name="metaNarrative" placeholder="Describe the overall narrative..."></textarea>
+
+                <div id="subNarratives-container">
+                    <div class="sub-narrative-entry">
+                        <label>Sub-Narrative 1:</label>
+                        <textarea class="sub-narrative-text" name="sub-narrative-text" placeholder="Enter sub-narrative 1..."></textarea>
+                    </div>
+                </div>
+                <button type="button" class="add-button" onclick="addSubNarrative()">Add Sub-Narrative</button>
+            </div>
+
+            <div class="section">
+                <h2>Impact</h2>
+                <label for="reach">Reach:</label>
+                <textarea id="reach" name="reach" placeholder="Describe the reach of the incident..."></textarea>
+
+                <label for="outcome">Outcome:</label>
+                <textarea id="outcome" name="outcome" placeholder="Describe any real-life outcomes..."></textarea>
+            </div>
+
+            <div class="section">
+                <h2>Key Objectives and Behaviors (DISARM Framework)</h2>
+                <p class="help-text">
+                    Max 2 objectives and 4 TTPs from the
+                    <a href="https://disarmfoundation.github.io/disarm-navigator/" target="_blank">DISARM Framework</a>
+                    <button type="button" class="add-button" onclick="uploadNavigatorFile()">Upload from Navigator file</button>
+                </p>
+                <div id="objectives-container">
+                    <div class="objective-entry">
+                        <label>Objective 1:</label>
+                        <input type="text" class="objective-title" name="objective-title" placeholder="Title of objective" value="">
+                        <textarea class="objective-justification" name="objective-justification" placeholder="Justification"></textarea>
+                    </div>
+                    <div class="objective-entry">
+                        <label>Objective 2:</label>
+                        <input type="text" class="objective-title" name="objective-title" placeholder="Title of objective" value="">
+                        <textarea class="objective-justification" name="objective-justification" placeholder="Justification"></textarea>
+                    </div>
+                </div>
+
+                <div id="ttps-container">
+                    <div class="ttp-entry">
+                        <label>TTP 1:</label>
+                        <input type="text" class="ttp-title" name="ttp-title" placeholder="Title of TTP">
+                        <textarea class="ttp-explanation" name="ttp-explanation" placeholder="Explanation">TTP 1 - explanation.</textarea>
+                    </div>
+                </div>
+
+                <button type="button" class="add-button" onclick="addTTP()">Add TTP</button>
+            </div>
+
+            <div class="section">
+                <h2>Recommendations and Actions Taken</h2>
+                <label for="actionsTaken">Actions Taken:</label>
+                <textarea id="actionsTaken" name="actionsTaken" placeholder="E.g., reported network to Meta and X..."></textarea>
+
+                <div id="recommendations-container">
+                    <div class="recommendation-entry">
+                        <label>Recommendation 1:</label>
+                        <textarea class="recommendation-text" name="recommendation-text" placeholder="Enter recommendation 1..."></textarea>
+                    </div>
+                </div>
+                <button type="button" class="add-button" onclick="addRecommendation()">Add Recommendation</button>
+            </div>
+
+            <div class="section">
+                <h2>Details</h2>
+                <table id="evidence-table" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr class="header-row">
+                            <th>Report</th>
+                            <th>Threat Actor</th>
+                            <th>Evidence</th>
+                            <th>Authors</th>
+                            <th>Platforms</th>
+                            <th>Logo</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="evidence-rows-container">
+                        <tr class="evidence-row">
+                            <td>
+                                <input type="url" class="evidence-report-url" name="evidence-report-url"
+                                        pattern="https?://.+" title="Please enter a valid URL starting with http:// or https://">
+                            </td>
+                            <td><input type="text" class="evidence-threat" name="evidence-threat" placeholder="Threat Actor"></td>
+                            <td>
+                                <input type="url" class="evidence-evidence-link" name="evidence-evidence-link"
+                                        pattern="https?://.+" title="Please enter a valid URL starting with http:// or https://">
+                            </td>
+                            <td><input type="text" class="evidence-authors" name="evidence-authors" placeholder="Authors"></td>
+                            <td><input type="text" class="evidence-platforms" name="evidence-platforms" placeholder="Platforms"></td>
+                            <td><input type="text" class="evidence-logo" name="evidence-logo" placeholder="Logo"></td>
+                            <td>
+                                <button type="button" class="add-button" onclick="addAuthor(this)">Add Author</button>&nbsp;&nbsp;
+                                </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="buttons">
+                <button type="submit" id="submitToSheetButton">Submit to Google Sheet</button>
+
+                <button type="button" onclick="downloadAsDocx()">Download DOCX</button>
+                </div>
+        </div>
+        </form>
+
+    <script>
+        // Define globally to access across the script
+        let objectivesList = [];
+        let ttpsList = [];
+        let navigatorFileUploaded = false; // Track if the navigator file was uploaded successfully
+
+        // Tab functionality (no change needed here for form submission)
+        function openTab(evt, tabName) {
+            var i, tabContent, tabButtons;
+
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].style.display = "none";
+            }
+
+            tabButtons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+            }
+
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+
+            if (tabName === "preview-tab") {
+                // generatePreview(); // Keep if you re-enable the preview tab
+            }
+        }
+
+        // Add TTP field
+        let ttpCount = 1;
+        function addTTP() {
+            if (ttpCount >= 4) {
+                alert("Maximum 4 TTPs allowed");
+                return;
+            }
+
+            ttpCount++;
+            const container = document.getElementById("ttps-container");
+            const newTTP = document.createElement("div");
+            newTTP.className = "ttp-entry";
+            newTTP.innerHTML = `
+                <label>TTP ${ttpCount}:</label>
+                <input type="text" class="ttp-title" name="ttp-title" placeholder="Title of TTP">
+                <textarea class="ttp-explanation" name="ttp-explanation" placeholder="Explanation">TTP ${ttpCount} - explanation.</textarea>
+                <button type="button" class="remove-button" onclick="removeTTP(this)">Remove</button>
+            `;
+            container.appendChild(newTTP);
+        }
+
+        // Remove TTP field
+        function removeTTP(button) {
+            const entry = button.parentNode;
+            entry.parentNode.removeChild(entry);
+            ttpCount--;
+
+            const ttpEntries = document.querySelectorAll("#ttps-container .ttp-entry");
+            for (let i = 0; i < ttpEntries.length; i++) {
+                const label = ttpEntries[i].querySelector("label");
+                label.textContent = `TTP ${i + 1}:`;
+            }
+        }
+
+        // Add Sub-Narrative field
+        let subNarrativeCount = 1; // Correct initial count to align with label for 1st
+        function addSubNarrative() {
+            subNarrativeCount++; // Increment before creating to get correct new label
+            const container = document.getElementById("subNarratives-container");
+            const newSubNarrative = document.createElement("div");
+            newSubNarrative.className = "sub-narrative-entry";
+            newSubNarrative.innerHTML = `
+                <label>Sub-Narrative ${subNarrativeCount}:</label>
+                <textarea class="sub-narrative-text" name="sub-narrative-text" placeholder="Enter sub-narrative ${subNarrativeCount}..."></textarea>
+                <button type="button" class="remove-button" onclick="removeSubNarrative(this)">Remove</button>
+            `;
+            container.appendChild(newSubNarrative);
+        }
+
+        // Remove Sub-Narrative field
+        function removeSubNarrative(button) {
+            const entry = button.parentNode;
+            entry.parentNode.removeChild(entry);
+            subNarrativeCount--;
+
+            const subNarrativeEntries = document.querySelectorAll("#subNarratives-container .sub-narrative-entry");
+            for (let i = 0; i < subNarrativeEntries.length; i++) {
+                const label = subNarrativeEntries[i].querySelector("label");
+                label.textContent = `Sub-Narrative ${i + 1}:`;
+            }
+        }
+
+        // Add Recommendation field
+        let recommendationCount = 1; // Correct initial count
+        function addRecommendation() {
+            recommendationCount++; // Increment before creating
+            const container = document.getElementById("recommendations-container");
+            const newRecommendation = document.createElement("div");
+            newRecommendation.className = "recommendation-entry";
+            newRecommendation.innerHTML = `
+                <label>Recommendation ${recommendationCount}:</label>
+                <textarea class="recommendation-text" name="recommendation-text" placeholder="Enter recommendation ${recommendationCount}..."></textarea>
+                <button type="button" class="remove-button" onclick="removeRecommendation(this)">Remove</button>
+            `;
+            container.appendChild(newRecommendation);
+        }
+
+        // Remove Recommendation field
+        function removeRecommendation(button) {
+            const entry = button.parentNode;
+            entry.parentNode.removeChild(entry);
+            recommendationCount--;
+
+            const recommendationEntries = document.querySelectorAll("#recommendations-container .recommendation-entry");
+            for (let i = 0; i < recommendationEntries.length; i++) {
+                const label = recommendationEntries[i].querySelector("label");
+                label.textContent = `Recommendation ${i + 1}:`;
+            }
+        }
+
+        // --- NEW/MODIFIED JAVASCRIPT FOR GOOGLE SHEETS SUBMISSION ---
+
+        // Get a reference to your form
+        const incidentForm = document.getElementById("incidentForm");
+
+        // Add an event listener for form submission
+        incidentForm.addEventListener("submit", async (e) => {
+            e.preventDefault(); // Prevent the default form submission (which would reload the page)
+
+            const submitButton = document.getElementById("submitToSheetButton"); // Get the specific submit button
+            submitButton.disabled = true; // Disable button to prevent multiple submissions
+            submitButton.textContent = 'Submitting...'; // Provide feedback
+
+            const formData = new FormData(incidentForm); // Get all form data
+
+            // IMPORTANT: REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxd_eD9wAl021Nw9gpCRUVwuueNXN0_w99tesBQHtoPGMTxzW0Hs_UhoM60NJmr2HpdFg/exec"; // <--- Replace this line!
+
+            try {
+                const response = await fetch(appsScriptUrl, {
+                    method: "POST",
+                    body: formData, // FormData handles setting the correct Content-Type (multipart/form-data)
+                });
+
+                const result = await response.json(); // Assuming your Apps Script returns JSON
+
+                if (response.ok && result.success) { // Check both HTTP status and custom success flag
+                    alert("Incident submitted successfully to Google Sheet!");
+                    incidentForm.reset(); // Clear form fields
+                    resetDynamicFields(); // Reset dynamically added fields
+                } else {
+                    alert("Failed to submit incident: " + (result.error || "Unknown error. Please check the console."));
+                    console.error("Submission error:", result.error);
+                }
+            } catch (error) {
+                console.error("Network or script error:", error);
+                alert("An error occurred during submission. Please check your internet connection and try again.");
+            } finally {
+                submitButton.disabled = false; // Re-enable button
+                submitButton.textContent = 'Submit to Google Sheet'; // Reset button text
+            }
+        });
+
+        // Helper function to reset dynamic fields after submission
+        function resetDynamicFields() {
+            // Reset Sub-Narratives
+            const subNarrativesContainer = document.getElementById('subNarratives-container');
+            subNarrativesContainer.innerHTML = `
+                <div class="sub-narrative-entry">
+                    <label>Sub-Narrative 1:</label>
+                    <textarea class="sub-narrative-text" name="sub-narrative-text" placeholder="Enter sub-narrative 1..."></textarea>
+                </div>
+            `;
+            subNarrativeCount = 1; // Reset counter
+
+            // Reset TTPs
+            const ttpsContainer = document.getElementById('ttps-container');
+            ttpsContainer.innerHTML = `
+                <div class="ttp-entry">
+                    <label>TTP 1:</label>
+                    <input type="text" class="ttp-title" name="ttp-title" placeholder="Title of TTP">
+                    <textarea class="ttp-explanation" name="ttp-explanation" placeholder="Explanation">TTP 1 - explanation.</textarea>
+                </div>
+            `;
+            ttpCount = 1; // Reset counter
+
+            // Reset Recommendations
+            const recommendationsContainer = document.getElementById('recommendations-container');
+            recommendationsContainer.innerHTML = `
+                <div class="recommendation-entry">
+                    <label>Recommendation 1:</label>
+                    <textarea class="recommendation-text" name="recommendation-text" placeholder="Enter recommendation 1..."></textarea>
+                </div>
+            `;
+            recommendationCount = 1; // Reset counter
+
+            // Reset Evidence Table (keep one empty row)
+            const evidenceRowsContainer = document.getElementById('evidence-rows-container');
+            evidenceRowsContainer.innerHTML = `
+                <tr class="evidence-row">
+                    <td>
+                        <input type="url" class="evidence-report-url" name="evidence-report-url"
+                                pattern="https?://.+" title="Please enter a valid URL starting with http:// or https://">
+                    </td>
+                    <td><input type="text" class="evidence-threat" name="evidence-threat" placeholder="Threat Actor"></td>
+                    <td>
+                        <input type="url" class="evidence-evidence-link" name="evidence-evidence-link"
+                                pattern="https?://.+" title="Please enter a valid URL starting with http:// or https://">
+                    </td>
+                    <td><input type="text" class="evidence-authors" name="evidence-authors" placeholder="Authors"></td>
+                    <td><input type="text" class="evidence-platforms" name="evidence-platforms" placeholder="Platforms"></td>
+                    <td><input type="text" class="evidence-logo" name="evidence-logo" placeholder="Logo"></td>
+                    <td>
+                        <button type="button" class="add-button" onclick="addAuthor(this)">Add Author</button>
+                    </td>
+                </tr>
+            `;
+
+            // Reset Objectives and TTPs from Navigator (restore default inputs)
+            document.getElementById('objectives-container').innerHTML = `
+                <div class="objective-entry">
+                    <label>Objective 1:</label>
+                    <input type="text" class="objective-title" name="objective-title" placeholder="Title of objective" value="">
+                    <textarea class="objective-justification" name="objective-justification" placeholder="Justification"></textarea>
+                </div>
+                <div class="objective-entry">
+                    <label>Objective 2:</label>
+                    <input type="text" class="objective-title" name="objective-title" placeholder="Title of objective" value="">
+                    <textarea class="objective-justification" name="objective-justification" placeholder="Justification"></textarea>
+                </div>
+            `;
+            document.getElementById('ttps-container').innerHTML = `
+                <div class="ttp-entry">
+                    <label>TTP 1:</label>
+                    <input type="text" class="ttp-title" name="ttp-title" placeholder="Title of TTP">
+                    <textarea class="ttp-explanation" name="ttp-explanation" placeholder="Explanation"></textarea>
+                </div>
+            `;
+            objectivesList = []; // Clear the global lists from Navigator upload
+            ttpsList = [];
+            navigatorFileUploaded = false;
+        }
+
+
+        // --- Existing functions for DOCX/PDF generation (left as is) ---
+        // You would need to ensure the data capture for these still works
+        // or modify them to pull from the current form state.
+        async function uploadNavigatorFile() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'application/json';
+            fileInput.onchange = async function () {
+                const file = fileInput.files[0];
+                if (!file) return;
+
+                try {
+                    const json = JSON.parse(await file.text());
+                    objectivesList = []; // Reset the global list
+                    ttpsList = [];        // Reset the global list
+
+                    for (const technique of json.techniques || []) {
+                        if (technique.score > 0) {
+                            const title = await fetchTechniqueTitle(technique.techniqueID); // This function is not defined here.
+                            const justification = technique.comment || '';
+
+                            if (['plan-strategy', 'plan-objectives'].includes(technique.tactic)) {
+                                objectivesList.push({title: title, justification: justification}); // Store as objects
+                            } else {
+                                ttpsList.push({title: title, explanation: justification}); // Store as objects
+                            }
+                        }
+                    }
+
+                    // Populate the objectives and TTPs in the UI (overwriting existing inputs)
+                    const objectivesContainer = document.getElementById('objectives-container');
+                    objectivesContainer.innerHTML = objectivesList.map((obj, index) => `
+                        <div class="objective-entry">
+                            <label>Objective ${index + 1}:</label>
+                            <input type="text" class="objective-title" name="objective-title" value="${obj.title}" placeholder="Title of objective">
+                            <textarea class="objective-justification" name="objective-justification" placeholder="Justification">${obj.justification}</textarea>
+                        </div>
+                    `).join('');
+
+                    const ttpsContainer = document.getElementById('ttps-container');
+                    ttpsContainer.innerHTML = ttpsList.map((ttp, index) => `
+                        <div class="ttp-entry">
+                            <label>TTP ${index + 1}:</label>
+                            <input type="text" class="ttp-title" name="ttp-title" value="${ttp.title}" placeholder="Title of TTP">
+                            <textarea class="ttp-explanation" name="ttp-explanation" placeholder="Explanation">${ttp.explanation}</textarea>
+                            ${index > 0 ? `<button type="button" class="remove-button" onclick="removeTTP(this)">Remove</button>` : ''}
+                        </div>
+                    `).join('');
+                    ttpCount = ttpsList.length; // Update TTP count for adding new ones
+
+                    navigatorFileUploaded = true; // Mark navigator file as successfully uploaded
+                    alert('Navigator file processed successfully!');
+                } catch (error) {
+                    console.error('Error processing Navigator file:', error);
+                    alert('Failed to process the Navigator file. Please ensure it is a valid JSON file.');
+                }
+            };
+            fileInput.click();
+        }
+
+        // Placeholder for fetchTechniqueTitle - You'd need to implement this
+        // It's likely an API call to DISARM or a local JSON lookup.
+        async function fetchTechniqueTitle(techniqueID) {
+            console.warn(`fetchTechniqueTitle called for ${techniqueID}. This function needs to be implemented to fetch actual titles.`);
+            return `DISARM TTP ${techniqueID}`; // Placeholder title
+        }
+
+        function generatePreview() {
+            // This function is commented out in the HTML buttons, so it won't run unless re-enabled.
+            // If you re-enable it, ensure it correctly reads values from the 'name' attributes.
+            const previewContent = document.getElementById("preview-content");
+
+            const incidentNumber = document.getElementById("incidentNumber").value || "0001";
+            const tlpLevel = document.getElementById("tlpLevel").value;
+            const country = document.getElementById("country").value || "DE";
+            const title = document.getElementById("title").value || "Use the same title as the report. If no report is present, a suggestion is to use the format: Actor, doing what to who";
+            const date = document.getElementById("date").value || "28/06/2024";
+
+            const summary = document.getElementById("summary").value ||
+                `- Summary of incident - 1-2 sentences\n- Summary of narrative - 1 sentence\n- Summary of impact\n- Summary of DISARM TTPs\n- Summary of recommendations.`;
+
+            const incident = document.getElementById("incident").value ||
+                "Describe the scope of what you found.";
+
+            const metaNarrative = document.getElementById("metaNarrative").value ||
+                "Meta narrative: Degradation of the West; Technological progress endangers public safety.";
+
+            const subNarrativeEntries = document.querySelectorAll(".sub-narrative-text");
+            let subNarratives = Array.from(subNarrativeEntries)
+                .map((entry, index) => entry.value || `Sub-Narrative ${index + 1}: [No content provided]`)
+                .join("<br>"); // Use <br> for HTML preview
+
+            const reach = document.getElementById("reach").value || "";
+            const outcome = document.getElementById("outcome").value || "";
+
+            // Collect objectives and TTPs, prioritize uploaded if available, otherwise use form inputs
+            let currentObjectives = [];
+            if (navigatorFileUploaded && objectivesList.length > 0) {
+                currentObjectives = objectivesList.map(obj => `<strong>${obj.title}:</strong> ${obj.justification}`);
+            } else {
+                const objectiveTitles = document.querySelectorAll('.objective-title');
+                const objectiveJustifications = document.querySelectorAll('.objective-justification');
+                for (let i = 0; i < objectiveTitles.length; i++) {
+                    const titleVal = objectiveTitles[i].value;
+                    const justificationVal = objectiveJustifications[i] ? objectiveJustifications[i].value : '';
+                    if (titleVal || justificationVal) {
+                        currentObjectives.push(`<strong>${titleVal || 'Untitled Objective'}:</strong> ${justificationVal}`);
+                    }
+                }
+            }
+            const objectivesHtml = currentObjectives.length > 0 ? currentObjectives.join("<br>") : "No objectives provided.";
+
+            let currentTTPs = [];
+            if (navigatorFileUploaded && ttpsList.length > 0) {
+                currentTTPs = ttpsList.map(ttp => `<strong>${ttp.title}:</strong> ${ttp.explanation}`);
+            } else {
+                const ttpTitles = document.querySelectorAll('.ttp-title');
+                const ttpExplanations = document.querySelectorAll('.ttp-explanation');
+                for (let i = 0; i < ttpTitles.length; i++) {
+                    const titleVal = ttpTitles[i].value;
+                    const explanationVal = ttpExplanations[i] ? ttpExplanations[i].value : '';
+                    if (titleVal || explanationVal) {
+                        currentTTPs.push(`<strong>${titleVal || 'Untitled TTP'}:</strong> ${explanationVal}`);
+                    }
+                }
+            }
+            const ttpsHtml = currentTTPs.length > 0 ? currentTTPs.join("<br>") : "No TTPs provided.";
+
+
+            const actionsTaken = document.getElementById("actionsTaken").value ||
+                "Action taken (e.g. reported page to Meta, sent article to journalists, reported case to regulator):";
+
+            const recommendationEntries = document.querySelectorAll(".recommendation-text");
+            let recommendations = Array.from(recommendationEntries)
+                .map((entry, index) => entry.value || `Recommendation ${index + 1}: [No content provided]`)
+                .join("<br>"); // Use <br> for HTML preview
+
+            // Collect evidence table data
+            const evidenceRows = document.querySelectorAll("#evidence-table tbody tr");
+            let evidenceTableHtml = '';
+            if (evidenceRows.length > 0) {
+                evidenceTableHtml += `
+                    <table>
+                        <thead>
+                            <tr class="header-row">
+                                <th>Report</th>
+                                <th>Threat Actor</th>
+                                <th>Evidence</th>
+                                <th>Authors</th>
+                                <th>Platforms</th>
+                                <th>Logo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                evidenceRows.forEach(row => {
+                    const reportUrl = row.querySelector('.evidence-report-url')?.value || '';
+                    const threat = row.querySelector('.evidence-threat')?.value || '';
+                    const evidenceLink = row.querySelector('.evidence-evidence-link')?.value || '';
+                    const authors = row.querySelector('.evidence-authors')?.value || '';
+                    const platforms = row.querySelector('.evidence-platforms')?.value || '';
+                    const logo = row.querySelector('.evidence-logo')?.value || ''; // Assuming URL for logo
+
+                    evidenceTableHtml += `
+                        <tr>
+                            <td>${reportUrl ? `<a href="${reportUrl}" target="_blank">${reportUrl}</a>` : ''}</td>
+                            <td>${threat}</td>
+                            <td>${evidenceLink ? `<a href="${evidenceLink}" target="_blank">${evidenceLink}</a>` : ''}</td>
+                            <td>${authors}</td>
+                            <td>${platforms}</td>
+                            <td>${logo}</td>
+                        </tr>
+                    `;
+                });
+                evidenceTableHtml += `
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                evidenceTableHtml = "<p>No evidence details provided.</p>";
+            }
+
+
+            // Construct the HTML for the preview
+            previewContent.innerHTML = `
+                <div class="preview-template">
+                    <p><strong>Incident Alert: ${incidentNumber}</strong></p>
+                    <p><strong>TLP:</strong> ${tlpLevel}</p>
+                    <p><strong>Country/Region:</strong> ${country}</p>
+                    <p><strong>Title:</strong> ${title}</p>
+                    <p><strong>Date:</strong> ${date}</p>
+
+                    <h2>Summary</h2>
+                    <p style="white-space: pre-wrap;">${summary}</p>
+
+                    <h2>Incident</h2>
+                    <p style="white-space: pre-wrap;">${incident}</p>
+
+                    <h2>Narrative</h2>
+                    <p><strong>Meta Narrative:</strong> ${metaNarrative}</p>
+                    <p><strong>Sub-Narratives:</strong></p>
+                    <p style="white-space: pre-wrap;">${subNarratives}</p>
+
+                    <h2>Impact</h2>
+                    <p><strong>Reach:</strong> ${reach}</p>
+                    <p><strong>Outcome:</strong> ${outcome}</p>
+
+                    <h2>Key Objectives and Behaviors (DISARM Framework)</h2>
+                    <h3>Objectives:</h3>
+                    <p style="white-space: pre-wrap;">${objectivesHtml}</p>
+                    <h3>TTPs:</h3>
+                    <p style="white-space: pre-wrap;">${ttpsHtml}</p>
+
+                    <h2>Recommendations and Actions Taken</h2>
+                    <p><strong>Actions Taken:</strong> ${actionsTaken}</p>
+                    <p><strong>Recommendations:</strong></p>
+                    <p style="white-space: pre-wrap;">${recommendations}</p>
+
+                    <h2>Details</h2>
+                    ${evidenceTableHtml}
+                </div>
+            `;
+        }
+
+
+        // Add Author (for the Evidence table) - keeps the existing functionality
+        function addAuthor(button) {
+            const row = button.closest('.evidence-row');
+            const newRow = row.cloneNode(true);
+            const inputs = newRow.querySelectorAll('input, textarea');
+            inputs.forEach(input => input.value = ''); // Clear values in the new row
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-button';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = function() { removeEvidenceRow(this); };
+            newRow.querySelector('td:last-child').innerHTML = ''; // Clear existing buttons
+            newRow.querySelector('td:last-child').appendChild(removeBtn); // Add only remove button
+
+            document.getElementById('evidence-rows-container').appendChild(newRow);
+        }
+
+        function removeEvidenceRow(button) {
+            const row = button.closest('.evidence-row');
+            row.parentNode.removeChild(row);
+        }
+
+
+        // Dummy functions for now, original code probably had these
+        function downloadAsDocx() {
+            console.log("Starting the DOCX generation process...");
+
+            try {
+                // Get values from form fields
+                const incidentNumber = document.getElementById("incidentNumber").value || "0001";
+                const tlpLevel = document.getElementById("tlpLevel").value;
+                const country = document.getElementById("country").value || "DE";
+                const title = document.getElementById("title").value || "Use the same title as the report. If no report is present, a suggestion is to use the format: Actor, doing what to who";
+                const date = document.getElementById("date").value || "28/06/2024";
+                const summary = document.getElementById("summary").value || "- Summary of incident - 1-2 sentences\n- Summary of narrative - 1 sentence\n- Summary of impact\n- Summary of DISARM TTPs\n- Summary of recommendations.";
+                const incident = document.getElementById("incident").value || "Describe the scope of what you found.";
+                const metaNarrative = document.getElementById("metaNarrative").value || "Meta narrative: Degradation of the West; Technological progress endangers public safety.";
+                const subNarrativeEntries = document.querySelectorAll(".sub-narrative-text");
+                let subNarratives = Array.from(subNarrativeEntries)
+                    .map((entry, index) => entry.value || `Sub-Narrative ${index + 1}: [No content provided]`)
+                    .join("\n");
+
+                const subNarrativeTextRuns = subNarratives.split("\n").map(line => new docx.TextRun({ break: 1, text: line }));
+                const subNarrativeParagraph = new docx.Paragraph({ children: subNarrativeTextRuns });
+
+                const reach = document.getElementById("reach").value || "";
+                const outcome = document.getElementById("outcome").value || "";
+                const actionsTaken = document.getElementById("actionsTaken").value || "Action taken (e.g. reported page to Meta, sent article to journalists, reported case to regulator):";
+                const recommendationEntries = document.querySelectorAll(".recommendation-text");
+                let recommendations = Array.from(recommendationEntries)
+                    .map((entry, index) => entry.value || `Recommendation ${index + 1}: [No content provided]`)
+                    .join("\n");
+
+                const recommendationTextRuns = recommendations.split("\n").map(line => new docx.TextRun({ break: 1, text: line }));
+                const recommendationParagraph = new docx.Paragraph({ children: recommendationTextRuns });
+
+                console.log("Form values collected successfully.");
+
+                if (!navigatorFileUploaded) {
+                    // Get objectives and TTPs
+                    const objectiveEntries = document.querySelectorAll('.objective-entry');
+                    let objectivesList = [];
+                    objectiveEntries.forEach((entry) => {
+                        const objTitle = entry.querySelector('.objective-title').value || '';
+                        const objJust = entry.querySelector('.objective-justification').value || '';
+                        if (objTitle.trim() !== '') {
+                            if (objJust.trim() !== '') {
+                                objectivesList.push(`Objective: ${objTitle} - ${objJust}`);
+                            } else {
+                                objectivesList.push(`Objective: ${objTitle}`);
+                            }
+                        }
+                    });
+
+                    const ttpEntries = document.querySelectorAll('.ttp-entry');
+                    let ttpsList = [];
+                    ttpEntries.forEach((entry) => {
+                        const ttpTitle = entry.querySelector('.ttp-title').value || '';
+                        const ttpExpl = entry.querySelector('.ttp-explanation').value || '';
+                        if (ttpTitle.trim() !== '' || ttpExpl.trim() !== '') {
+                            ttpsList.push(`TTP: ${ttpTitle}${ttpExpl ? ' - ' + ttpExpl : ''}`);
+                        }
+                    });
+
+                    console.log("Objectives and TTPs collected successfully.");
+                }
+
+                // Set border style to none for all tables
+                const noBorders = {
+                    top: { style: docx.BorderStyle.NONE },
+                    bottom: { style: docx.BorderStyle.NONE },
+                    left: { style: docx.BorderStyle.NONE },
+                    right: { style: docx.BorderStyle.NONE },
+                    insideHorizontal: { style: docx.BorderStyle.NONE },
+                    insideVertical: { style: docx.BorderStyle.NONE }
+                };
+
+                // Split the headerGroupTable into two separate tables
+                const headerTopTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    columnSpan: 3,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: `CDN Incident Alert: ${incidentNumber}. ${tlpLevel}`,
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                                new docx.TableCell({
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    columnSpan: 2,
+                                    children: [
+                                        new docx.Paragraph({
+                                            alignment: docx.AlignmentType.LEFT,
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Date", 
+                                                    bold: false,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                const blankPara = new docx.Paragraph({ text: "", spacing: { after: 0, before: 0 } });
+
+                const headerBottomTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 1,
+                                    width: { size: 10, type: docx.WidthType.PERCENTAGE },
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    verticalAlign: docx.VerticalAlign.BOTTOM,
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Title",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                                new docx.TableCell({
+                                    columnSpan: 1,
+                                    width: { size: 10, type: docx.WidthType.PERCENTAGE },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    verticalAlign: docx.VerticalAlign.BOTTOM,
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: " " + country,
+                                                    bold: false,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    width: { size: 70, type: docx.WidthType.PERCENTAGE },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    verticalAlign: docx.VerticalAlign.BOTTOM,
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: title,
+                                                    bold: false,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                                new docx.TableCell({
+                                    columnSpan: 1,
+                                    width: { size: 10, type: docx.WidthType.PERCENTAGE },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    verticalAlign: docx.VerticalAlign.BOTTOM,
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: date,
+                                                    bold: false,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                // 2. Summary table
+                const summaryTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 4,
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Summary",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: summary.split(/\r?\n/).map(line =>
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: line,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        })
+                                    ),
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                // Incident table
+                const incidentTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Incident",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: incident,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                // Narrative table
+                const narrativeTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Narrative",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: `Meta-narrative: ${metaNarrative}`,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                        subNarrativeParagraph,
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                // Impact table
+                const impactTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Impact and Outcome",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: `Reach: ${reach}`,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: `Outcome: ${outcome}`,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                // Key Objectives table
+                const objectivesTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Key Objectives and Behaviours",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                        ...objectivesList.map(obj => new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: obj,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        })),
+                        ...ttpsList.map(ttp => new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: ttp,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        })),
+                    ],
+                });
+
+                // Recommendations table
+                const recommendationsTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: [
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    shading: { fill: "8EAADB" },
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: "Recommendations and Actions Taken",
+                                                    bold: true,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                        new docx.TableRow({
+                            children: [
+                                new docx.TableCell({
+                                    columnSpan: 3,
+                                    borders: noBorders,
+                                    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+                                    children: [
+                                        new docx.Paragraph({
+                                            children: [
+                                                new docx.TextRun({
+                                                    text: `Actions Taken: ${actionsTaken}`,
+                                                    font: "Times New Roman",
+                                                    size: 22,
+                                                }),
+                                            ],
+                                        }),
+                                        recommendationParagraph,
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+                // Collect evidence rows
+                const evidenceRows = Array.from(document.querySelectorAll('.evidence-row')).map(row => ({
+                    report: row.querySelector('.evidence-report-url').value,
+                    threat: row.querySelector('.evidence-threat').value,
+                    evidence: row.querySelector('.evidence-evidence-link').value,
+                    authors: row.querySelector('.evidence-authors').value,
+                    platforms: row.querySelector('.evidence-platforms').value,
+                    logo: row.querySelector('.evidence-logo').value,
+                }));
+
+                // Build the footerTable rows
+                const footerTableRows = [
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({ width: { size: 16.6, type: docx.WidthType.PERCENTAGE }, shading: { fill: "8EAADB" }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: "Report", bold: true, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.6, type: docx.WidthType.PERCENTAGE }, shading: { fill: "8EAADB" }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: "Threat Actor", bold: true, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, shading: { fill: "8EAADB" }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: "Evidence", bold: true, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, shading: { fill: "8EAADB" }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: "Authors", bold: true, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, shading: { fill: "8EAADB" }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: "Platforms", bold: true, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, shading: { fill: "8EAADB" }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: "Logo", bold: true, font: "Times New Roman", size: 22 })] })] })
+                        ]
+                    }),
+                    ...evidenceRows.map(ev => new docx.TableRow({
+                        children: [
+                            new docx.TableCell({ width: { size: 16.6, type: docx.WidthType.PERCENTAGE }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: ev.report, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.6, type: docx.WidthType.PERCENTAGE }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: ev.threat, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: ev.evidence, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: ev.authors, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: ev.platforms, font: "Times New Roman", size: 22 })] })] }),
+                            new docx.TableCell({ width: { size: 16.7, type: docx.WidthType.PERCENTAGE }, borders: noBorders, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: [new docx.Paragraph({ alignment: docx.AlignmentType.LEFT, children: [new docx.TextRun({ text: ev.logo, font: "Times New Roman", size: 22 })] })] })
+                        ]
+                    }))
+                ];
+                const footerTable = new docx.Table({
+                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                    borders: noBorders,
+                    rows: footerTableRows
+                });
+
+                // Update the docx.Document children array to add blankPara after every table
+                const doc = new docx.Document({
+                    sections: [{
+                        children: [
+                            headerTopTable,headerBottomTable, blankPara,
+                            summaryTable, blankPara,
+                            incidentTable, blankPara,
+                            narrativeTable, blankPara,
+                            impactTable, blankPara,
+                            objectivesTable, blankPara,
+                            recommendationsTable, blankPara,
+                            footerTable
+                        ]
+                    }]
+                });
+
+                docx.Packer.toBlob(doc).then(blob => {
+                    const sanitizedTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase() || "incident-alert";
+                    saveAs(blob, `cdn-incident-alert-${sanitizedTitle}.docx`);
+                });
+            //}
+                // Create the DOCX document
+                //const doc = new docx.Document({
+                //    sections: [{
+                //        children: [
+                //            new docx.Paragraph({ text: `CDN Incident Alert: ${incidentNumber}. ${tlpLevel}`, bold: true }),
+                //            new docx.Paragraph({ text: `Date: ${date}` }),
+                //            new docx.Paragraph({ text: `Title: ${title}` }),
+                //            new docx.Paragraph({ text: `Country: ${country}` }),
+                //            new docx.Paragraph({ text: "Summary:", bold: true }),
+                //            new docx.Paragraph({ text: summary }),
+                //            new docx.Paragraph({ text: "Incident:", bold: true }),
+                //            new docx.Paragraph({ text: incident }),
+                //            new docx.Paragraph({ text: "Meta Narrative:", bold: true }),
+                //            new docx.Paragraph({ text: metaNarrative }),
+                //            new docx.Paragraph({ text: "Sub-Narratives:", bold: true }),
+                //            new docx.Paragraph({ text: subNarratives }),
+                //            new docx.Paragraph({ text: "Impact and Outcome:", bold: true }),
+                //            new docx.Paragraph({ text: `Reach: ${reach}` }),
+                //            new docx.Paragraph({ text: `Outcome: ${outcome}` }),
+                //            new docx.Paragraph({ text: "Actions Taken:", bold: true }),
+                //            new docx.Paragraph({ text: actionsTaken }),
+                //            new docx.Paragraph({ text: "Recommendations:", bold: true }),
+                //            new docx.Paragraph({ text: recommendations }),
+                //            ...objectivesList.map(obj => new docx.Paragraph({ text: obj })),
+                //            ...ttpsList.map(ttp => new docx.Paragraph({ text: ttp }))
+                //        ]
+                //    }]
+                //});
+
+                //console.log("DOCX document structure created successfully.");
+
+                // Generate and download the DOCX file
+                //docx.Packer.toBlob(doc).then(blob => {
+                //    console.log("DOCX file generated successfully.");
+                //    const sanitizedTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase() || "incident-alert";
+                //    saveAs(blob, `cdn-incident-alert-${sanitizedTitle}.docx`);
+                //    console.log("DOCX file download initiated.");
+                //}).catch(error => {
+                //    console.error("Error generating DOCX file:", error);
+                //    alert("An error occurred while generating the DOCX file. Please check the console for details.");
+                //});
+            } catch (error) {
+                console.error("Error in the DOCX generation process:", error);
+                alert("An error occurred during the DOCX generation process. Please check the console for details.");
+            }
+        }
+
+        function downloadAsPdf() {
+            alert('PDF download functionality needs full implementation with html2pdf.js.');
+            // This would involve taking the content (e.g., from #preview-content) and rendering it to PDF.
+            // html2pdf().from(document.getElementById('preview-content')).save();
+        }
+
+        function downloadTemplate() {
+            alert('HTML template download functionality needs implementation.');
+            // This would essentially download the current HTML content of the page.
+            // const htmlContent = document.documentElement.outerHTML;
+            // const blob = new Blob([htmlContent], { type: 'text/html' });
+            // saveAs(blob, "incident_generator_template.html");
+        }
+    </script>
+</body>
+</html>
