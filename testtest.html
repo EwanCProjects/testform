@@ -435,6 +435,181 @@
     }
 }
 
+        async function handleUrlParametersAndFetchData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmail = urlParams.get('userEmail');
+            const editToken = urlParams.get('editToken');
+
+            if (userEmail && editToken) {
+                // This is an edit request
+                document.getElementById('userEmail').value = userEmail;
+                document.getElementById('editToken').value = editToken;
+                document.getElementById('submitterEmail').value = userEmail;
+                document.getElementById('submitterEmail').readOnly = true;
+
+                // Change submit button text to indicate this is an update
+                document.getElementById('submitButton').textContent = 'Update Submission';
+
+                // Add a notice at the top of the form
+                const notice = document.createElement('div');
+                notice.className = 'notice'; // Use the CSS class defined earlier
+                notice.innerHTML = '<strong>Notice:</strong> You are editing an existing submission that requires revision.';
+                // Insert after H1 heading, or adjust selector as needed for your layout
+                document.querySelector('h1').parentNode.insertBefore(notice, document.querySelector('h1').nextSibling);
+
+                // --- Fetch data from Apps Script ---
+                try {
+                    // IMPORTANT: Replace with your deployed Google Apps Script web app URL for doGet
+                    // This URL should be the same as the doPost URL.
+                    const appsScriptGetUrl = 'YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL';
+                    const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json' // Expecting JSON back
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success && result.data) {
+                        const data = result.data; // This is the structured data from Apps Script doGet
+
+                        // Populate form fields with existing data
+                        document.getElementById('incidentNumber').value = data.incidentNumber || '';
+                        document.getElementById('tlpLevel').value = data.tlpLevel || '';
+                        document.getElementById('country').value = data.country || '';
+                        document.getElementById('title').value = data.title || '';
+                        document.getElementById('date').value = data.date || ''; // Date should already be in YYYY-MM-DD
+                        document.getElementById('summary').value = data.summary || '';
+                        document.getElementById('incident').value = data.incident || '';
+                        document.getElementById('metaNarrative').value = data.metaNarrative || '';
+
+                        // Handle multiple sub-narratives
+                        const subNarrativesText = data.subNarrativeText || '';
+                        if (subNarrativesText) {
+                            const subNarrativesArray = subNarrativesText.split('\n'); // Split by newline
+                            const container = document.getElementById('sub-narratives-container');
+                            container.innerHTML = ''; // Clear existing empty field
+                            subNarrativesArray.forEach((text, index) => {
+                                if (index > 0) addSubNarrativeField(); // Add new field only if needed
+                                document.getElementsByName('sub-narrative-text')[index].value = text;
+                            });
+                        } else {
+                            // Ensure there's at least one empty field if no data was fetched
+                            if (document.getElementsByName('sub-narrative-text').length === 0) addSubNarrativeField();
+                        }
+
+
+                        document.getElementById('reach').value = data.reach || '';
+                        document.getElementById('outcome').value = data.outcome || '';
+
+                        // Handle Objectives (assuming titles and justifications are in the combined string)
+                        const objectiveData = data.objectives || '';
+                        if (objectiveData) {
+                            const titlesMatch = objectiveData.match(/Titles: ([^\n]*)/);
+                            const justificationsMatch = objectiveData.match(/Justifications: (.*)/);
+
+                            const titles = titlesMatch ? titlesMatch[1].split('; ').filter(Boolean) : [];
+                            const justifications = justificationsMatch ? justificationsMatch[1].split('; ').filter(Boolean) : [];
+
+                            const container = document.getElementById('objectives-container');
+                            container.innerHTML = '';
+                            for (let i = 0; i < Math.max(titles.length, justifications.length); i++) {
+                                if (i > 0) addObjectiveField();
+                                if (titles[i]) document.getElementsByName('objective-title')[i].value = titles[i];
+                                if (justifications[i]) document.getElementsByName('objective-justification')[i].value = justifications[i];
+                            }
+                        } else {
+                             if (document.getElementsByName('objective-title').length === 0) addObjectiveField();
+                        }
+
+                        // Handle TTPs
+                        const ttpData = data.ttps || '';
+                        if (ttpData) {
+                            const titlesMatch = ttpData.match(/Titles: ([^\n]*)/);
+                            const explanationsMatch = ttpData.match(/Explanations: (.*)/);
+
+                            const titles = titlesMatch ? titlesMatch[1].split('; ').filter(Boolean) : [];
+                            const explanations = explanationsMatch ? explanationsMatch[1].split('; ').filter(Boolean) : [];
+
+                            const container = document.getElementById('ttps-container');
+                            container.innerHTML = '';
+                            for (let i = 0; i < Math.max(titles.length, explanations.length); i++) {
+                                if (i > 0) addTTPField();
+                                if (titles[i]) document.getElementsByName('ttp-title')[i].value = titles[i];
+                                if (explanations[i]) document.getElementsByName('ttp-explanation')[i].value = explanations[i];
+                            }
+                        } else {
+                            if (document.getElementsByName('ttp-title').length === 0) addTTPField();
+                        }
+
+                        document.getElementById('actionsTaken').value = data.actionsTaken || '';
+
+                        // Handle multiple recommendations
+                        const recommendationsText = data.recommendationText || '';
+                        if (recommendationsText) {
+                            const recommendationsArray = recommendationsText.split('\n');
+                            const container = document.getElementById('recommendations-container');
+                            container.innerHTML = '';
+                            recommendationsArray.forEach((text, index) => {
+                                if (index > 0) addRecommendationField();
+                                document.getElementsByName('recommendation-text')[index].value = text;
+                            });
+                        } else {
+                            if (document.getElementsByName('recommendation-text').length === 0) addRecommendationField();
+                        }
+
+                        // Handle Evidence Table Data
+                        const evidenceReportUrls = (data.evidenceReportUrl || '').split('\n').filter(Boolean);
+                        const evidenceThreats = (data.evidenceThreat || '').split('\n').filter(Boolean);
+                        const evidenceLinks = (data.evidenceEvidenceLink || '').split('\n').filter(Boolean);
+                        const evidenceAuthors = (data.evidenceAuthors || '').split('\n').filter(Boolean);
+                        const evidencePlatforms = (data.evidencePlatforms || '').split('\n').filter(Boolean);
+                        const evidenceLogos = (data.evidenceLogo || '').split('\n').filter(Boolean);
+
+                        const maxEvidenceRows = Math.max(
+                            evidenceReportUrls.length, evidenceThreats.length, evidenceLinks.length,
+                            evidenceAuthors.length, evidencePlatforms.length, evidenceLogos.length
+                        );
+
+                        const evidenceContainer = document.getElementById('evidence-table-body');
+                        evidenceContainer.innerHTML = ''; // Clear any default empty row
+
+                        for (let i = 0; i < maxEvidenceRows; i++) {
+                            addEvidenceRow(); // Always add a row first
+                            // Populate the fields in the newly added or existing row
+                            if (evidenceReportUrls[i]) document.querySelectorAll('[name="evidence-report-url"]')[i].value = evidenceReportUrls[i];
+                            if (evidenceThreats[i]) document.querySelectorAll('[name="evidence-threat"]')[i].value = evidenceThreats[i];
+                            if (evidenceLinks[i]) document.querySelectorAll('[name="evidence-evidence-link"]')[i].value = evidenceLinks[i];
+                            if (evidenceAuthors[i]) document.querySelectorAll('[name="evidence-authors"]')[i].value = evidenceAuthors[i];
+                            if (evidencePlatforms[i]) document.querySelectorAll('[name="evidence-platforms"]')[i].value = evidencePlatforms[i];
+                            if (evidenceLogos[i]) document.querySelectorAll('[name="evidence-logo"]')[i].value = evidenceLogos[i];
+                        }
+                        // If no evidence data, ensure one empty row is present for new input
+                        if (maxEvidenceRows === 0) {
+                            addEvidenceRow();
+                        }
+
+                    } else {
+                        console.error('Error fetching submission data:', result.error);
+                        alert('Could not load existing submission: ' + result.error);
+                        // Optionally redirect or hide the form
+                    }
+                } catch (error) {
+                    console.error('Network or parsing error:', error);
+                    alert('An error occurred while fetching data for editing.');
+                }
+            } else {
+                // This is a new submission form load (no userEmail/editToken in URL)
+                // Ensure dynamic fields start with at least one empty row for input
+                if (document.getElementsByName('sub-narrative-text').length === 0) addSubNarrativeField();
+                if (document.getElementsByName('objective-title').length === 0) addObjectiveField();
+                if (document.getElementsByName('ttp-title').length === 0) addTTPField();
+                if (document.getElementsByName('recommendation-text').length === 0) addRecommendationField();
+                if (document.getElementsByName('evidence-report-url').length === 0) addEvidenceRow();
+            }
+        }
+
 // Call this when the page loads
 window.addEventListener('load', handleUrlParameters);
         // Tab functionality (no change needed here for form submission)
