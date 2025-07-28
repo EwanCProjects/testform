@@ -436,11 +436,13 @@
 }
 
         async function handleUrlParametersAndFetchData() {
+            console.log("1");
             const urlParams = new URLSearchParams(window.location.search);
             const userEmail = urlParams.get('userEmail');
             const editToken = urlParams.get('editToken');
 
             if (userEmail && editToken) {
+                console.log("2");
                 // This is an edit request
                 document.getElementById('userEmail').value = userEmail;
                 document.getElementById('editToken').value = editToken;
@@ -459,6 +461,7 @@
 
                 // --- Fetch data from Apps Script ---
                 try {
+                    console.log("3");
                     // IMPORTANT: Replace with your deployed Google Apps Script web app URL for doGet
                     // This URL should be the same as the doPost URL.
                     const appsScriptGetUrl = 'YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL';
@@ -472,6 +475,7 @@
                     const result = await response.json();
 
                     if (result.success && result.data) {
+                        console.log("4");
                         const data = result.data; // This is the structured data from Apps Script doGet
 
                         // Populate form fields with existing data
