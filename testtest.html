@@ -467,7 +467,7 @@
                     console.log("3");
                     // IMPORTANT: Replace with your deployed Google Apps Script web app URL for doGet
                     // This URL should be the same as the doPost URL.
-                    const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbwvfS-oNrpRhLy6fupC3AtLL84BFigHDBxomUmoVKFiOUnwfoLnvUi37gbmWooQGsAdxA/exec';
+                    const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbzEleh7wKE2xAN9cl6BR3v9CXmDbWK5Ja1CjN1tl4m2p6kBlyOu_rnxfQl4amsdEzVrPw/exec';
                     const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
                         method: 'GET',
                         headers: {
@@ -751,7 +751,7 @@ window.addEventListener('load', handleUrlParameters);
         formData.set('userEmail', document.getElementById('submitterEmail').value);
     }
 
-    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbwvfS-oNrpRhLy6fupC3AtLL84BFigHDBxomUmoVKFiOUnwfoLnvUi37gbmWooQGsAdxA/exec";
+    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzEleh7wKE2xAN9cl6BR3v9CXmDbWK5Ja1CjN1tl4m2p6kBlyOu_rnxfQl4amsdEzVrPw/exec";
 
     try {
         const response = await fetch(appsScriptUrl, {
