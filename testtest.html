@@ -467,7 +467,7 @@
                     console.log("3");
                     // IMPORTANT: Replace with your deployed Google Apps Script web app URL for doGet
                     // This URL should be the same as the doPost URL.
-                    const appsScriptGetUrl = 'YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL';
+                    const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbxWTo_-W_EGyxCN0v2rOcT8nwmyDakBF1-tTFjVuvINHkdAUQ8hMKFd0EytzxI5NzRt2Q/exec';
                     const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
                         method: 'GET',
                         headers: {
