@@ -412,28 +412,6 @@
         let navigatorFileUploaded = false; // Track if the navigator file was uploaded successfully
 
 
-        function handleUrlParameters() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userEmail = urlParams.get('userEmail');
-    const editToken = urlParams.get('editToken');
-    
-    if (userEmail && editToken) {
-        // This is an edit request
-        document.getElementById('userEmail').value = userEmail;
-        document.getElementById('editToken').value = editToken;
-        document.getElementById('submitterEmail').value = userEmail;
-        document.getElementById('submitterEmail').readOnly = true;
-        
-        // Change submit button text to indicate this is an update
-        document.getElementById('submitToSheetButton').textContent = 'Update Submission';
-        
-        // Add a notice at the top of the form
-        const notice = document.createElement('div');
-        notice.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 20px; border-radius: 5px;';
-        notice.innerHTML = '<strong>Notice:</strong> You are editing an existing submission that requires revision.';
-        document.querySelector('.section').parentNode.insertBefore(notice, document.querySelector('.section'));
-    }
-}
 
         async function handleUrlParametersAndFetchData() {
             console.log("1");
@@ -617,8 +595,7 @@
             }
         }
 
-// Call this when the page loads
-window.addEventListener('load', handleUrlParameters);
+
         // Tab functionality (no change needed here for form submission)
         function openTab(evt, tabName) {
             var i, tabContent, tabButtons;
