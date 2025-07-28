@@ -187,6 +187,12 @@
     <h1>CDN Incident Alert Generator</h1>
 
     <form id="incidentForm">
+
+        <input type="hidden" id="userEmail" name="userEmail" value="">
+        <input type="hidden" id="editToken" name="editToken" value="">
+        
+ 
+
         <div class="tabs">
             <button class="tab-button active" onclick="openTab(event, 'form-tab')">Input Form</button>
             </div>
@@ -194,6 +200,9 @@
         <div id="form-tab" class="tab-content" style="display: block;">
             <div class="section">
                 <h2>Header Information</h2>
+                <label for="submitterEmail" class="required">Your Email:</label>
+                <input type="email" id="submitterEmail" name="submitterEmail" placeholder="your.email@example.com" required>
+                
                 <label for="incidentNumber" class="required">Incident Number:</label>
                 <input type="text" id="incidentNumber" name="incidentNumber" placeholder="e.g., 0001" value="0001">
 
@@ -391,11 +400,43 @@
         </form>
 
     <script>
+
+
+
+
+
+
         // Define globally to access across the script
         let objectivesList = [];
         let ttpsList = [];
         let navigatorFileUploaded = false; // Track if the navigator file was uploaded successfully
 
+
+        function handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userEmail = urlParams.get('userEmail');
+    const editToken = urlParams.get('editToken');
+    
+    if (userEmail && editToken) {
+        // This is an edit request
+        document.getElementById('userEmail').value = userEmail;
+        document.getElementById('editToken').value = editToken;
+        document.getElementById('submitterEmail').value = userEmail;
+        document.getElementById('submitterEmail').readOnly = true;
+        
+        // Change submit button text to indicate this is an update
+        document.getElementById('submitToSheetButton').textContent = 'Update Submission';
+        
+        // Add a notice at the top of the form
+        const notice = document.createElement('div');
+        notice.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 20px; border-radius: 5px;';
+        notice.innerHTML = '<strong>Notice:</strong> You are editing an existing submission that requires revision.';
+        document.querySelector('.section').parentNode.insertBefore(notice, document.querySelector('.section'));
+    }
+}
+
+// Call this when the page loads
+window.addEventListener('load', handleUrlParameters);
         // Tab functionality (no change needed here for form submission)
         function openTab(evt, tabName) {
             var i, tabContent, tabButtons;
@@ -514,41 +555,56 @@
         const incidentForm = document.getElementById("incidentForm");
 
         // Add an event listener for form submission
-        incidentForm.addEventListener("submit", async (e) => {
-            e.preventDefault(); // Prevent the default form submission (which would reload the page)
+    incidentForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-            const submitButton = document.getElementById("submitToSheetButton"); // Get the specific submit button
-            submitButton.disabled = true; // Disable button to prevent multiple submissions
-            submitButton.textContent = 'Submitting...'; // Provide feedback
+    const submitButton = document.getElementById("submitToSheetButton");
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
 
-            const formData = new FormData(incidentForm); // Get all form data
+    const formData = new FormData(incidentForm);
+    
+    // Set user email from the visible field if not already set (for new submissions)
+    if (!formData.get('userEmail')) {
+        formData.set('userEmail', document.getElementById('submitterEmail').value);
+    }
 
-            // IMPORTANT: REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxd_eD9wAl021Nw9gpCRUVwuueNXN0_w99tesBQHtoPGMTxzW0Hs_UhoM60NJmr2HpdFg/exec"; // <--- Replace this line!
+    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbw4rSG2GQ9Wdy0cvr380CgKWjI_9o8l2lv3_xcp2Gy4xJVuvW8m2bAVV37y16D82NlnHg/exec";
 
-            try {
-                const response = await fetch(appsScriptUrl, {
-                    method: "POST",
-                    body: formData, // FormData handles setting the correct Content-Type (multipart/form-data)
-                });
+    try {
+        const response = await fetch(appsScriptUrl, {
+            method: "POST",
+            body: formData,
+        });
 
-                const result = await response.json(); // Assuming your Apps Script returns JSON
+        const result = await response.json();
 
-                if (response.ok && result.success) { // Check both HTTP status and custom success flag
-                    alert("Incident submitted successfully to Google Sheet!");
-                    incidentForm.reset(); // Clear form fields
-                    resetDynamicFields(); // Reset dynamically added fields
-                } else {
-                    alert("Failed to submit incident: " + (result.error || "Unknown error. Please check the console."));
-                    console.error("Submission error:", result.error);
+        if (response.ok && result.success) {
+            if (result.isUpdate) {
+                alert("Incident updated successfully!");
+            } else {
+                alert("Incident submitted successfully! You may receive an email if revisions are needed.");
+                // Store edit token for potential future use
+                if (result.editToken) {
+                    console.log('Edit token for this submission:', result.editToken);
                 }
-            } catch (error) {
-                console.error("Network or script error:", error);
-                alert("An error occurred during submission. Please check your internet connection and try again.");
-            } finally {
-                submitButton.disabled = false; // Re-enable button
-                submitButton.textContent = 'Submit to Google Sheet'; // Reset button text
             }
+            
+            if (!result.isUpdate) {
+                incidentForm.reset();
+                resetDynamicFields();
+            }
+        } else {
+            alert("Failed to submit incident: " + (result.error || "Unknown error"));
+            console.error("Submission error:", result.error);
+        }
+    } catch (error) {
+        console.error("Network or script error:", error);
+        alert("An error occurred during submission.");
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit to Google Sheet';
+    }
         });
 
         // Helper function to reset dynamic fields after submission
