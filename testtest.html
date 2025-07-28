@@ -445,13 +445,16 @@
                 console.log("2");
                 // This is an edit request
                 document.getElementById('userEmail').value = userEmail;
+                console.log("2a");
                 document.getElementById('editToken').value = editToken;
+                console.log("2b");
                 document.getElementById('submitterEmail').value = userEmail;
+                console.log("2c");
                 document.getElementById('submitterEmail').readOnly = true;
-
+                console.log("2d");
                 // Change submit button text to indicate this is an update
                 document.getElementById('submitButton').textContent = 'Update Submission';
-
+                console.log("2e");
                 // Add a notice at the top of the form
                 const notice = document.createElement('div');
                 notice.className = 'notice'; // Use the CSS class defined earlier
