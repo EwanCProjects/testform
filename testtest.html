@@ -493,38 +493,22 @@ async function fetchAndPopulateData(userEmail, editToken) {
     const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbycYdLjjiLH0w4m-tyRr9ee69frdXIMOPT1IAk0HUCMKaGlMv9ksS6VJLHlHLVEmqtBHA/exec';
     
     try {
-        const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
+        const response = await fetch(`${appsScriptGetUrl}`, { // You might need to adjust the URL if your POST endpoint is different
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    // No body sent for this diagnostic test, or an empty JSON object: JSON.stringify({})
+    body: JSON.stringify({ userEmail: userEmail, editToken: editToken }) // If your POST expects a body
+});
 
 
-
-
-
-
-
-                
 
 
 
 
 
         
-
-
-
-
-
-
-
-
-
-
-            
-        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
