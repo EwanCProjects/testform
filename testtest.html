@@ -538,7 +538,7 @@ for (const key in dataToSend) {
 
 // 3. Use the FormData object in your fetch request
 // The browser will automatically set the 'Content-Type' header to 'multipart/form-data'
-const respons = await fetch(appsScriptUrl, {
+const respons = await fetch(`${appsScriptGetUrl}`, {
     method: "POST",
     body: myFormData, // Use the FormData object here
 });
