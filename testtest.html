@@ -493,6 +493,11 @@ async function fetchAndPopulateData(userEmail, editToken) {
     const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbycYdLjjiLH0w4m-tyRr9ee69frdXIMOPT1IAk0HUCMKaGlMv9ksS6VJLHlHLVEmqtBHA/exec';
     
     try {
+
+
+
+
+        /*
         const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
 
             method: 'GET',
@@ -506,7 +511,45 @@ async function fetchAndPopulateData(userEmail, editToken) {
         });
 
 
+*/
 
+
+        // Your original data as a JavaScript object
+const dataToSend = {
+    userEmail: 'test@example.com',
+    message: 'Hello World',
+    incidentNumber: 'INC-123'
+};
+
+// 1. Create a new FormData object
+const myFormData = new FormData();
+
+// 2. Append each piece of data to the FormData object
+for (const key in dataToSend) {
+    if (dataToSend.hasOwnProperty(key)) {
+        myFormData.append(key, dataToSend[key]);
+    }
+}
+
+// 3. Use the FormData object in your fetch request
+// The browser will automatically set the 'Content-Type' header to 'multipart/form-data'
+const response = await fetch(appsScriptUrl, {
+    method: "POST",
+    body: myFormData, // Use the FormData object here
+});
+
+// You can then process the response as usual
+const result = await response.json(); // Or .text()
+console.log(result);
+
+
+
+
+
+
+
+
+        
 
 
 
