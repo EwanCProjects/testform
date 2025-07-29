@@ -507,39 +507,6 @@ async function fetchAndPopulateData(userEmail, editToken) {
 
                 
 
-                
-        const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
-    method: 'GET'
-});
-
-
-        const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
-    method: 'GET',
-    headers: {
-        'Content-Type': 'application/json' // Or remove it as in variation 1
-    },
-    credentials: 'include' // Add this line
-});
-
-
-        const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
-    method: 'GET',
-    mode: 'no-cors', // Add this line
-    headers: {
-        'Content-Type': 'application/json' // Or remove it
-    }
-});
-
-
-        const response = await fetch(`${appsScriptGetUrl}`, { // You might need to adjust the URL if your POST endpoint is different
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    // No body sent for this diagnostic test, or an empty JSON object: JSON.stringify({})
-    body: JSON.stringify({ userEmail: userEmail, editToken: editToken }) // If your POST expects a body
-});
-
 
 
 
