@@ -758,13 +758,33 @@ window.addEventListener('load', handleUrlParameters);
         formData.set('userEmail', document.getElementById('submitterEmail').value);
     }
 
-    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbyqYPC5CVS6Znpz4A8e7H69jHBwSNTcZB9REKccE9GUUWwCD06UISxw23ZLAI9mrylcyA/exec";
+    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxOLLY8UTu28bcgxyoD45Op0BcuPSzq4a_1jkttwdwhdZQP5OztivF67o3kLWBaNNOcoQ/exec";
 
     try {
         const response = await fetch(appsScriptUrl, {
             method: "POST",
             body: formData,
         });
+
+
+
+
+        //delete below if not work
+        const formData1 = new FormData();
+        formData1.append('action', 'update');
+        const response1 = await fetch(appsScriptUrl, {
+            method: "POST",
+            body: formData1,
+        });
+        console.log(response1);
+
+
+
+
+
+
+
+        
 
         const result = await response.json();
 
