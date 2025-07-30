@@ -490,7 +490,7 @@ function addEditNotice() {
 async function fetchAndPopulateData(userEmail, editToken) {
     console.log("Fetching existing submission data");
     
-    const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbycYdLjjiLH0w4m-tyRr9ee69frdXIMOPT1IAk0HUCMKaGlMv9ksS6VJLHlHLVEmqtBHA/exec';
+    const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbw_7flshEdvpACBDjMiqbyX1n_aqIXC1Ghe--AZcb_WoQvj687t15XKxRfS7LfeWZpQOA/exec';
     
     try {
 
@@ -526,6 +526,7 @@ console.log("n1");
 
 // 1. Create a new FormData object
 const myFormData = new FormData();
+formDataForNewPost.append('actionType', 'update_status');
         console.log("n2");
 
 // 2. Append each piece of data to the FormData object
@@ -966,7 +967,7 @@ function initializeNewSubmissionForm() {
         formData.set('userEmail', document.getElementById('submitterEmail').value);
     }
 
-    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbycYdLjjiLH0w4m-tyRr9ee69frdXIMOPT1IAk0HUCMKaGlMv9ksS6VJLHlHLVEmqtBHA/exec";
+    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbw_7flshEdvpACBDjMiqbyX1n_aqIXC1Ghe--AZcb_WoQvj687t15XKxRfS7LfeWZpQOA/exec";
 
     try {
         const response = await fetch(appsScriptUrl, {
