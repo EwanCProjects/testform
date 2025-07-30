@@ -412,429 +412,220 @@
         let navigatorFileUploaded = false; // Track if the navigator file was uploaded successfully
 
 
-async function handleUrlParametersAndFetchData() {
-    console.log("Starting URL parameter handling and data fetch");
+        function handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userEmail = urlParams.get('userEmail');
+    const editToken = urlParams.get('editToken');
     
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const userEmail = urlParams.get('userEmail');
-        const editToken = urlParams.get('editToken');
-
-        if (userEmail && editToken) {
-            console.log("Edit mode detected - setting up form for editing");
-            
-            // Configure form for editing mode
-            setupEditMode(userEmail, editToken);
-            
-            // Fetch and populate existing data
-            await fetchAndPopulateData(userEmail, editToken);
-            
-        } else {
-            console.log("New submission mode - initializing empty form");
-            
-            // Initialize form for new submission
-            initializeNewSubmissionForm();
-        }
-        
-    } catch (error) {
-        console.error("Critical error in handleUrlParametersAndFetchData:", error);
-        alert("An unexpected error occurred while loading the form. Please refresh and try again.");
-    }
-}
-
-function setupEditMode(userEmail, editToken) {
-    try {
-        // Set hidden form fields
+    if (userEmail && editToken) {
+        // This is an edit request
         document.getElementById('userEmail').value = userEmail;
         document.getElementById('editToken').value = editToken;
+        document.getElementById('submitterEmail').value = userEmail;
+        document.getElementById('submitterEmail').readOnly = true;
         
-        // Set and lock the email field
-        const submitterEmailField = document.getElementById('submitterEmail');
-        submitterEmailField.value = userEmail;
-        submitterEmailField.readOnly = true;
-        
-        // Update submit button text
+        // Change submit button text to indicate this is an update
         document.getElementById('submitToSheetButton').textContent = 'Update Submission';
         
-        // Add edit notice
-        addEditNotice();
-        
-        console.log("Edit mode setup completed");
-        
-    } catch (error) {
-        console.error("Error setting up edit mode:", error);
-        throw new Error("Failed to configure form for editing");
+        // Add a notice at the top of the form
+        const notice = document.createElement('div');
+        notice.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 20px; border-radius: 5px;';
+        notice.innerHTML = '<strong>Notice:</strong> You are editing an existing submission that requires revision.';
+        document.querySelector('.section').parentNode.insertBefore(notice, document.querySelector('.section'));
     }
 }
 
-function addEditNotice() {
-    const notice = document.createElement('div');
-    notice.className = 'notice';
-    notice.style.cssText = `
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-        padding: 12px;
-        margin: 10px 0;
-        border-radius: 4px;
-        font-weight: bold;
-    `;
-    notice.innerHTML = '<strong>Notice:</strong> You are editing an existing submission that requires revision.';
-    
-    const h1 = document.querySelector('h1');
-    if (h1 && h1.parentNode) {
-        h1.parentNode.insertBefore(notice, h1.nextSibling);
-    }
-}
-
-async function fetchAndPopulateData(userEmail, editToken) {
-    console.log("Fetching existing submission data");
-    
-    const appsScriptGetUrl = 'https://script.google.com/macros/s/AKfycbw_7flshEdvpACBDjMiqbyX1n_aqIXC1Ghe--AZcb_WoQvj687t15XKxRfS7LfeWZpQOA/exec';
-    
-    try {
-
-
-
-
-        /*
-        const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
-
-            method: 'GET',
-
-            headers: {
-
-                'Content-Type': 'application/json'
-
-            }
-
-        });
-
-
-*/
-
-
-        // Your original data as a JavaScript object
-const dataToSend = {
-    userEmail: 'test@example.com',
-    message: 'Hello World',
-    incidentNumber: 'INC-123'
-};
-
-console.log("n1");
-
-
-// 1. Create a new FormData object
-const myFormData = new FormData();
-myFormData.append('actionType', 'update_status');
-        console.log("n2");
-
-// 2. Append each piece of data to the FormData object
-for (const key in dataToSend) {
-    if (dataToSend.hasOwnProperty(key)) {
-        myFormData.append(key, dataToSend[key]);
-    }
-}
-        console.log("n3");
-
-// 3. Use the FormData object in your fetch request
-// The browser will automatically set the 'Content-Type' header to 'multipart/form-data'
-const respons = await fetch(`${appsScriptGetUrl}`, {
-    method: "POST",
-    headers: {
-    'Content-Type': 'text/plain;charset=utf-8',
-  },
-    body: myFormData, // Use the FormData object here
-});
-        console.log("n4");
-
-// You can then process the response as usual
-const resul = await respons.json(); // Or .text()
-console.log(resul);
 
 
 
 
 
-        
 
 
+async function handleUrlParametersAndFetchData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmail = urlParams.get('userEmail');
+            const editToken = urlParams.get('editToken');
 
-        
+            if (userEmail && editToken) {
+                // This is an edit request
+                document.getElementById('userEmail').value = userEmail;
+                document.getElementById('editToken').value = editToken;
+                document.getElementById('submitterEmail').value = userEmail;
+                document.getElementById('submitterEmail').readOnly = true;
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+                // Change submit button text to indicate this is an update
+                document.getElementById('submitButton').textContent = 'Update Submission';
 
-        const result = await response.json();
+                // Add a notice at the top of the form
+                const notice = document.createElement('div');
+                notice.className = 'notice'; // Use the CSS class defined earlier
+                notice.innerHTML = '<strong>Notice:</strong> You are editing an existing submission that requires revision.';
+                // Insert after H1 heading, or adjust selector as needed for your layout
+                document.querySelector('h1').parentNode.insertBefore(notice, document.querySelector('h1').nextSibling);
 
-        if (result.success && result.data) {
-            console.log("Data fetched successfully, populating form");
-            populateFormFields(result.data);
-        } else {
-            throw new Error(result.error || 'Unknown error occurred while fetching data');
-        }
-        
-    } catch (error) {
-        console.error('Error fetching submission data:', error);
-        alert(`Could not load existing submission: ${error.message}`);
-        throw error;
-    }
-}
+                // --- Fetch data from Apps Script ---
+                try {
+                    // IMPORTANT: Replace with your deployed Google Apps Script web app URL for doGet
+                    // This URL should be the same as the doPost URL.
+                    const appsScriptGetUrl = 'YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL';
+                    const response = await fetch(`${appsScriptGetUrl}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json' // Expecting JSON back
+                        }
+                    });
 
-function populateFormFields(data) {
-    try {
-        // Basic form fields
-        populateBasicFields(data);
-        
-        // Dynamic fields with special handling
-        populateSubNarratives(data.subNarrativeText);
-        populateObjectives(data.objectives);
-        populateTTPs(data.ttps);
-        populateRecommendations(data.recommendationText);
-        populateEvidenceTable(data);
-        
-        console.log("Form populated successfully");
-        
-    } catch (error) {
-        console.error("Error populating form fields:", error);
-        alert("Some form fields could not be populated. Please check the data and try again.");
-    }
-}
+                    const result = await response.json();
 
-function populateBasicFields(data) {
-    const fieldMappings = {
-        'incidentNumber': data.incidentNumber,
-        'tlpLevel': data.tlpLevel,
-        'country': data.country,
-        'title': data.title,
-        'date': data.date,
-        'summary': data.summary,
-        'incident': data.incident,
-        'metaNarrative': data.metaNarrative,
-        'reach': data.reach,
-        'outcome': data.outcome,
-        'actionsTaken': data.actionsTaken
-    };
+                    if (result.success && result.data) {
+                        const data = result.data; // This is the structured data from Apps Script doGet
 
-    Object.entries(fieldMappings).forEach(([fieldId, value]) => {
-        const element = document.getElementById(fieldId);
-        if (element) {
-            element.value = value || '';
-        }
-    });
-}
+                        // Populate form fields with existing data
+                        document.getElementById('incidentNumber').value = data.incidentNumber || '';
+                        document.getElementById('tlpLevel').value = data.tlpLevel || '';
+                        document.getElementById('country').value = data.country || '';
+                        document.getElementById('title').value = data.title || '';
+                        document.getElementById('date').value = data.date || ''; // Date should already be in YYYY-MM-DD
+                        document.getElementById('summary').value = data.summary || '';
+                        document.getElementById('incident').value = data.incident || '';
+                        document.getElementById('metaNarrative').value = data.metaNarrative || '';
 
-function populateSubNarratives(subNarrativesText) {
-    const container = document.getElementById('subNarratives-container');
-    if (!container) {
-        console.warn("Sub-narratives container not found");
-        return;
-    }
+                        // Handle multiple sub-narratives
+                        const subNarrativesText = data.subNarrativeText || '';
+                        if (subNarrativesText) {
+                            const subNarrativesArray = subNarrativesText.split('\n'); // Split by newline
+                            const container = document.getElementById('sub-narratives-container');
+                            container.innerHTML = ''; // Clear existing empty field
+                            subNarrativesArray.forEach((text, index) => {
+                                if (index > 0) addSubNarrativeField(); // Add new field only if needed
+                                document.getElementsByName('sub-narrative-text')[index].value = text;
+                            });
+                        } else {
+                            // Ensure there's at least one empty field if no data was fetched
+                            if (document.getElementsByName('sub-narrative-text').length === 0) addSubNarrativeField();
+                        }
 
-    container.innerHTML = ''; // Clear existing content
 
-    if (subNarrativesText && subNarrativesText.trim()) {
-        const subNarrativesArray = subNarrativesText.split('\n').filter(text => text.trim());
-        
-        subNarrativesArray.forEach((text, index) => {
-            addSubNarrativeField();
-            const fields = document.getElementsByName('sub-narrative-text');
-            if (fields[index]) {
-                fields[index].value = text.trim();
-            }
-        });
-    } else {
-        // Add at least one empty field
-        addSubNarrativeField();
-    }
-}
+                        document.getElementById('reach').value = data.reach || '';
+                        document.getElementById('outcome').value = data.outcome || '';
 
-function populateObjectives(objectiveData) {
-    const container = document.getElementById('objectives-container');
-    if (!container) {
-        console.warn("Objectives container not found");
-        return;
-    }
+                        // Handle Objectives (assuming titles and justifications are in the combined string)
+                        const objectiveData = data.objectives || '';
+                        if (objectiveData) {
+                            const titlesMatch = objectiveData.match(/Titles: ([^\n]*)/);
+                            const justificationsMatch = objectiveData.match(/Justifications: (.*)/);
 
-    container.innerHTML = ''; // Clear existing content
+                            const titles = titlesMatch ? titlesMatch[1].split('; ').filter(Boolean) : [];
+                            const justifications = justificationsMatch ? justificationsMatch[1].split('; ').filter(Boolean) : [];
 
-    if (objectiveData && objectiveData.trim()) {
-        const titlesMatch = objectiveData.match(/Titles:\s*([^\n]*)/);
-        const justificationsMatch = objectiveData.match(/Justifications:\s*(.*)/s);
+                            const container = document.getElementById('objectives-container');
+                            container.innerHTML = '';
+                            for (let i = 0; i < Math.max(titles.length, justifications.length); i++) {
+                                if (i > 0) addObjectiveField();
+                                if (titles[i]) document.getElementsByName('objective-title')[i].value = titles[i];
+                                if (justifications[i]) document.getElementsByName('objective-justification')[i].value = justifications[i];
+                            }
+                        } else {
+                             if (document.getElementsByName('objective-title').length === 0) addObjectiveField();
+                        }
 
-        const titles = titlesMatch ? titlesMatch[1].split(';').map(s => s.trim()).filter(Boolean) : [];
-        const justifications = justificationsMatch ? justificationsMatch[1].split(';').map(s => s.trim()).filter(Boolean) : [];
+                        // Handle TTPs
+                        const ttpData = data.ttps || '';
+                        if (ttpData) {
+                            const titlesMatch = ttpData.match(/Titles: ([^\n]*)/);
+                            const explanationsMatch = ttpData.match(/Explanations: (.*)/);
 
-        const maxItems = Math.max(titles.length, justifications.length, 1);
+                            const titles = titlesMatch ? titlesMatch[1].split('; ').filter(Boolean) : [];
+                            const explanations = explanationsMatch ? explanationsMatch[1].split('; ').filter(Boolean) : [];
 
-        for (let i = 0; i < maxItems; i++) {
-            addObjectiveField();
-            
-            const titleFields = document.getElementsByName('objective-title');
-            const justificationFields = document.getElementsByName('objective-justification');
-            
-            if (titleFields[i] && titles[i]) {
-                titleFields[i].value = titles[i];
-            }
-            if (justificationFields[i] && justifications[i]) {
-                justificationFields[i].value = justifications[i];
+                            const container = document.getElementById('ttps-container');
+                            container.innerHTML = '';
+                            for (let i = 0; i < Math.max(titles.length, explanations.length); i++) {
+                                if (i > 0) addTTPField();
+                                if (titles[i]) document.getElementsByName('ttp-title')[i].value = titles[i];
+                                if (explanations[i]) document.getElementsByName('ttp-explanation')[i].value = explanations[i];
+                            }
+                        } else {
+                            if (document.getElementsByName('ttp-title').length === 0) addTTPField();
+                        }
+
+                        document.getElementById('actionsTaken').value = data.actionsTaken || '';
+
+                        // Handle multiple recommendations
+                        const recommendationsText = data.recommendationText || '';
+                        if (recommendationsText) {
+                            const recommendationsArray = recommendationsText.split('\n');
+                            const container = document.getElementById('recommendations-container');
+                            container.innerHTML = '';
+                            recommendationsArray.forEach((text, index) => {
+                                if (index > 0) addRecommendationField();
+                                document.getElementsByName('recommendation-text')[index].value = text;
+                            });
+                        } else {
+                            if (document.getElementsByName('recommendation-text').length === 0) addRecommendationField();
+                        }
+
+                        // Handle Evidence Table Data
+                        const evidenceReportUrls = (data.evidenceReportUrl || '').split('\n').filter(Boolean);
+                        const evidenceThreats = (data.evidenceThreat || '').split('\n').filter(Boolean);
+                        const evidenceLinks = (data.evidenceEvidenceLink || '').split('\n').filter(Boolean);
+                        const evidenceAuthors = (data.evidenceAuthors || '').split('\n').filter(Boolean);
+                        const evidencePlatforms = (data.evidencePlatforms || '').split('\n').filter(Boolean);
+                        const evidenceLogos = (data.evidenceLogo || '').split('\n').filter(Boolean);
+
+                        const maxEvidenceRows = Math.max(
+                            evidenceReportUrls.length, evidenceThreats.length, evidenceLinks.length,
+                            evidenceAuthors.length, evidencePlatforms.length, evidenceLogos.length
+                        );
+
+                        const evidenceContainer = document.getElementById('evidence-table-body');
+                        evidenceContainer.innerHTML = ''; // Clear any default empty row
+
+                        for (let i = 0; i < maxEvidenceRows; i++) {
+                            addEvidenceRow(); // Always add a row first
+                            // Populate the fields in the newly added or existing row
+                            if (evidenceReportUrls[i]) document.querySelectorAll('[name="evidence-report-url"]')[i].value = evidenceReportUrls[i];
+                            if (evidenceThreats[i]) document.querySelectorAll('[name="evidence-threat"]')[i].value = evidenceThreats[i];
+                            if (evidenceLinks[i]) document.querySelectorAll('[name="evidence-evidence-link"]')[i].value = evidenceLinks[i];
+                            if (evidenceAuthors[i]) document.querySelectorAll('[name="evidence-authors"]')[i].value = evidenceAuthors[i];
+                            if (evidencePlatforms[i]) document.querySelectorAll('[name="evidence-platforms"]')[i].value = evidencePlatforms[i];
+                            if (evidenceLogos[i]) document.querySelectorAll('[name="evidence-logo"]')[i].value = evidenceLogos[i];
+                        }
+                        // If no evidence data, ensure one empty row is present for new input
+                        if (maxEvidenceRows === 0) {
+                            addEvidenceRow();
+                        }
+
+                    } else {
+                        console.error('Error fetching submission data:', result.error);
+                        alert('Could not load existing submission: ' + result.error);
+                        // Optionally redirect or hide the form
+                    }
+                } catch (error) {
+                    console.error('Network or parsing error:', error);
+                    alert('An error occurred while fetching data for editing.');
+                }
+            } else {
+                // This is a new submission form load (no userEmail/editToken in URL)
+                // Ensure dynamic fields start with at least one empty row for input
+                if (document.getElementsByName('sub-narrative-text').length === 0) addSubNarrativeField();
+                if (document.getElementsByName('objective-title').length === 0) addObjectiveField();
+                if (document.getElementsByName('ttp-title').length === 0) addTTPField();
+                if (document.getElementsByName('recommendation-text').length === 0) addRecommendationField();
+                if (document.getElementsByName('evidence-report-url').length === 0) addEvidenceRow();
             }
         }
-    } else {
-        // Add at least one empty field
-        addObjectiveField();
-    }
-}
 
-function populateTTPs(ttpData) {
-    const container = document.getElementById('ttps-container');
-    if (!container) {
-        console.warn("TTPs container not found");
-        return;
-    }
 
-    container.innerHTML = ''; // Clear existing content
 
-    if (ttpData && ttpData.trim()) {
-        const titlesMatch = ttpData.match(/Titles:\s*([^\n]*)/);
-        const explanationsMatch = ttpData.match(/Explanations:\s*(.*)/s);
 
-        const titles = titlesMatch ? titlesMatch[1].split(';').map(s => s.trim()).filter(Boolean) : [];
-        const explanations = explanationsMatch ? explanationsMatch[1].split(';').map(s => s.trim()).filter(Boolean) : [];
 
-        const maxItems = Math.max(titles.length, explanations.length, 1);
 
-        for (let i = 0; i < maxItems; i++) {
-            addTTPField();
-            
-            const titleFields = document.getElementsByName('ttp-title');
-            const explanationFields = document.getElementsByName('ttp-explanation');
-            
-            if (titleFields[i] && titles[i]) {
-                titleFields[i].value = titles[i];
-            }
-            if (explanationFields[i] && explanations[i]) {
-                explanationFields[i].value = explanations[i];
-            }
-        }
-    } else {
-        // Add at least one empty field
-        addTTPField();
-    }
-}
 
-function populateRecommendations(recommendationsText) {
-    const container = document.getElementById('recommendations-container');
-    if (!container) {
-        console.warn("Recommendations container not found");
-        return;
-    }
 
-    container.innerHTML = ''; // Clear existing content
-
-    if (recommendationsText && recommendationsText.trim()) {
-        const recommendationsArray = recommendationsText.split('\n').filter(text => text.trim());
-        
-        recommendationsArray.forEach((text, index) => {
-            addRecommendationField();
-            const fields = document.getElementsByName('recommendation-text');
-            if (fields[index]) {
-                fields[index].value = text.trim();
-            }
-        });
-    } else {
-        // Add at least one empty field
-        addRecommendationField();
-    }
-}
-
-function populateEvidenceTable(data) {
-    const evidenceContainer = document.getElementById('evidence-rows-container');
-    if (!evidenceContainer) {
-        console.warn("Evidence container not found");
-        return;
-    }
-
-    evidenceContainer.innerHTML = ''; // Clear existing rows
-
-    // Extract and filter evidence data
-    const evidenceData = {
-        reportUrls: (data.evidenceReportUrl || '').split('\n').filter(Boolean),
-        threats: (data.evidenceThreat || '').split('\n').filter(Boolean),
-        links: (data.evidenceEvidenceLink || '').split('\n').filter(Boolean),
-        authors: (data.evidenceAuthors || '').split('\n').filter(Boolean),
-        platforms: (data.evidencePlatforms || '').split('\n').filter(Boolean),
-        logos: (data.evidenceLogo || '').split('\n').filter(Boolean)
-    };
-
-    const maxRows = Math.max(
-        evidenceData.reportUrls.length,
-        evidenceData.threats.length,
-        evidenceData.links.length,
-        evidenceData.authors.length,
-        evidenceData.platforms.length,
-        evidenceData.logos.length,
-        1 // At least one row
-    );
-
-    for (let i = 0; i < maxRows; i++) {
-        addEvidenceRow();
-        
-        // Populate the row with data if available
-        const rows = document.querySelectorAll('.evidence-row');
-        const currentRow = rows[rows.length - 1]; // Get the last added row
-        
-        if (currentRow) {
-            populateEvidenceRow(currentRow, evidenceData, i);
-        }
-    }
-}
-
-function populateEvidenceRow(row, evidenceData, index) {
-    const fields = {
-        'evidence-report-url': evidenceData.reportUrls[index] || '',
-        'evidence-threat': evidenceData.threats[index] || '',
-        'evidence-evidence-link': evidenceData.links[index] || '',
-        'evidence-authors': evidenceData.authors[index] || '',
-        'evidence-platforms': evidenceData.platforms[index] || '',
-        'evidence-logo': evidenceData.logos[index] || ''
-    };
-
-    Object.entries(fields).forEach(([className, value]) => {
-        const field = row.querySelector(`[name="${className}"]`);
-        if (field && value) {
-            field.value = value;
-        }
-    });
-}
-
-function initializeNewSubmissionForm() {
-    console.log("Initializing form for new submission");
-    
-    try {
-        // Ensure each dynamic section has at least one empty field
-        const fieldChecks = [
-            { name: 'sub-narrative-text', addFunction: addSubNarrativeField },
-            { name: 'objective-title', addFunction: addObjectiveField },
-            { name: 'ttp-title', addFunction: addTTPField },
-            { name: 'recommendation-text', addFunction: addRecommendationField },
-            { name: 'evidence-report-url', addFunction: addEvidenceRow }
-        ];
-
-        fieldChecks.forEach(({ name, addFunction }) => {
-            if (document.getElementsByName(name).length === 0) {
-                addFunction();
-            }
-        });
-        
-        console.log("New submission form initialized successfully");
-        
-    } catch (error) {
-        console.error("Error initializing new submission form:", error);
-        alert("There was an error setting up the form. Please refresh the page.");
-    }
-}
+// Call this when the page loads
+window.addEventListener('load', handleUrlParameters);
         // Tab functionality (no change needed here for form submission)
         function openTab(evt, tabName) {
             var i, tabContent, tabButtons;
@@ -967,7 +758,7 @@ function initializeNewSubmissionForm() {
         formData.set('userEmail', document.getElementById('submitterEmail').value);
     }
 
-    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbw_7flshEdvpACBDjMiqbyX1n_aqIXC1Ghe--AZcb_WoQvj687t15XKxRfS7LfeWZpQOA/exec";
+    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbyqYPC5CVS6Znpz4A8e7H69jHBwSNTcZB9REKccE9GUUWwCD06UISxw23ZLAI9mrylcyA/exec";
 
     try {
         const response = await fetch(appsScriptUrl, {
@@ -1998,8 +1789,6 @@ function initializeNewSubmissionForm() {
             // const blob = new Blob([htmlContent], { type: 'text/html' });
             // saveAs(blob, "incident_generator_template.html");
         }
-
-        window.addEventListener('load', handleUrlParametersAndFetchData);
     </script>
 </body>
 </html>
