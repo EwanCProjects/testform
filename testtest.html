@@ -412,7 +412,7 @@
         let navigatorFileUploaded = false; // Track if the navigator file was uploaded successfully
 
 
-        function handleUrlParameters() {
+       async function handleUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     const userEmail = urlParams.get('userEmail');
     const editToken = urlParams.get('editToken');
