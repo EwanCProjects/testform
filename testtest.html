@@ -418,6 +418,22 @@
     const editToken = urlParams.get('editToken');
     
     if (userEmail && editToken) {
+
+
+
+
+        //test
+        console.log("staaart1");
+        const response2 = await fetch(appsScriptUrl);
+        const text = await response2.text();
+        console.log(text);
+        console.log("eeend1");
+
+
+
+        
+
+        
         // This is an edit request
         document.getElementById('userEmail').value = userEmail;
         document.getElementById('editToken').value = editToken;
