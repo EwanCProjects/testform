@@ -541,6 +541,9 @@ for (const key in dataToSend) {
 // The browser will automatically set the 'Content-Type' header to 'multipart/form-data'
 const respons = await fetch(`${appsScriptGetUrl}`, {
     method: "POST",
+    headers: {
+    'Content-Type': 'text/plain;charset=utf-8',
+  },
     body: myFormData, // Use the FormData object here
 });
         console.log("n4");
@@ -548,9 +551,6 @@ const respons = await fetch(`${appsScriptGetUrl}`, {
 // You can then process the response as usual
 const resul = await respons.json(); // Or .text()
 console.log(resul);
-
-
-
 
 
 
