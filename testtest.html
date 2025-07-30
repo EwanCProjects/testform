@@ -758,7 +758,7 @@ window.addEventListener('load', handleUrlParameters);
         formData.set('userEmail', document.getElementById('submitterEmail').value);
     }
 
-    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzk26cSXYB5Ec-4fC0uo4X1uOVgUnc9wS1ItSKqNT_2MR2aU8hZtlBOIu-e923kg-kS_Q/exec";
+    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbyDh9FXIv_HjslUdP6H-AwvoOlIfI1HCQSMc0Z_lUS_mbrRWkDpqdIckm2cYvpr7JqZ7w/exec";
 
     try {
         const response = await fetch(appsScriptUrl, {
@@ -768,7 +768,7 @@ window.addEventListener('load', handleUrlParameters);
 
 
 
-
+/*
         //delete below if not work
         const formData1 = new FormData();
         formData1.append('action', 'update');
@@ -778,8 +778,12 @@ window.addEventListener('load', handleUrlParameters);
         });
         console.log(response1);
 
-
-
+*/
+console.log("staaart");
+        const response2 = await fetch(appsScriptUrl);
+const text = await response2.text();
+console.log(text);
+console.log("eeend");
 
 
 
