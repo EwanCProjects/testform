@@ -420,17 +420,6 @@
     if (userEmail && editToken) {
 
 
-/*
-         const appsScriptUrl1 = "https://script.google.com/macros/s/AKfycbxZ-GwE8q3q11eUDIB1Rxf67lOaHsUxUI6mYMg8a92-K3JKmf01JGg3sIsBo4_V8g-fKw/exec";
-        //test
-        console.log("staaart1");
-        const response2 = await fetch(appsScriptUrl1);
-        const text = await response2.text();
-        console.log(text);
-        console.log("eeend1");
-
-
-*/
 
 const appsScriptUrl1 = "https://script.google.com/macros/s/AKfycbwkFflwWmDtUNDou8AdZ_9tWVsC5WbVoKBvq92tdJHj30baNSIRXIwxQ1xvkEN88zOauw/exec";
 
@@ -441,13 +430,6 @@ const response2 = await fetch(urlWithParams);
 const text = await response2.text();
 console.log(text);
 console.log("eeend1");
-
-
-
-        
-
-
-        
 
         
         // This is an edit request
@@ -618,23 +600,6 @@ window.addEventListener('load', handleUrlParameters);
             method: "POST",
             body: formData,
         });
-
-
-
-/*
-        //delete below if not work
-        const formData1 = new FormData();
-        formData1.append('action', 'update');
-        const response1 = await fetch(appsScriptUrl, {
-            method: "POST",
-            body: formData1,
-        });
-        console.log(response1);
-
-*/
-
-
-
 
         
 
@@ -1442,48 +1407,7 @@ window.addEventListener('load', handleUrlParameters);
                     const sanitizedTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase() || "incident-alert";
                     saveAs(blob, `cdn-incident-alert-${sanitizedTitle}.docx`);
                 });
-            //}
-                // Create the DOCX document
-                //const doc = new docx.Document({
-                //    sections: [{
-                //        children: [
-                //            new docx.Paragraph({ text: `CDN Incident Alert: ${incidentNumber}. ${tlpLevel}`, bold: true }),
-                //            new docx.Paragraph({ text: `Date: ${date}` }),
-                //            new docx.Paragraph({ text: `Title: ${title}` }),
-                //            new docx.Paragraph({ text: `Country: ${country}` }),
-                //            new docx.Paragraph({ text: "Summary:", bold: true }),
-                //            new docx.Paragraph({ text: summary }),
-                //            new docx.Paragraph({ text: "Incident:", bold: true }),
-                //            new docx.Paragraph({ text: incident }),
-                //            new docx.Paragraph({ text: "Meta Narrative:", bold: true }),
-                //            new docx.Paragraph({ text: metaNarrative }),
-                //            new docx.Paragraph({ text: "Sub-Narratives:", bold: true }),
-                //            new docx.Paragraph({ text: subNarratives }),
-                //            new docx.Paragraph({ text: "Impact and Outcome:", bold: true }),
-                //            new docx.Paragraph({ text: `Reach: ${reach}` }),
-                //            new docx.Paragraph({ text: `Outcome: ${outcome}` }),
-                //            new docx.Paragraph({ text: "Actions Taken:", bold: true }),
-                //            new docx.Paragraph({ text: actionsTaken }),
-                //            new docx.Paragraph({ text: "Recommendations:", bold: true }),
-                //            new docx.Paragraph({ text: recommendations }),
-                //            ...objectivesList.map(obj => new docx.Paragraph({ text: obj })),
-                //            ...ttpsList.map(ttp => new docx.Paragraph({ text: ttp }))
-                //        ]
-                //    }]
-                //});
-
-                //console.log("DOCX document structure created successfully.");
-
-                // Generate and download the DOCX file
-                //docx.Packer.toBlob(doc).then(blob => {
-                //    console.log("DOCX file generated successfully.");
-                //    const sanitizedTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase() || "incident-alert";
-                //    saveAs(blob, `cdn-incident-alert-${sanitizedTitle}.docx`);
-                //    console.log("DOCX file download initiated.");
-                //}).catch(error => {
-                //    console.error("Error generating DOCX file:", error);
-                //    alert("An error occurred while generating the DOCX file. Please check the console for details.");
-                //});
+          
             } catch (error) {
                 console.error("Error in the DOCX generation process:", error);
                 alert("An error occurred during the DOCX generation process. Please check the console for details.");
