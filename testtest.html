@@ -420,7 +420,7 @@
     if (userEmail && editToken) {
 
 
-
+/*
          const appsScriptUrl1 = "https://script.google.com/macros/s/AKfycbxZ-GwE8q3q11eUDIB1Rxf67lOaHsUxUI6mYMg8a92-K3JKmf01JGg3sIsBo4_V8g-fKw/exec";
         //test
         console.log("staaart1");
@@ -429,6 +429,21 @@
         console.log(text);
         console.log("eeend1");
 
+
+*/
+
+
+const urlWithParams = `${appsScriptUrl1}?userEmail=${encodeURIComponent(userEmail)}&editToken=${encodeURIComponent(editToken)}`;
+
+console.log("staaart1");
+const response2 = await fetch(urlWithParams);
+const text = await response2.text();
+console.log(text);
+console.log("eeend1");
+
+
+
+        
 
 
         
