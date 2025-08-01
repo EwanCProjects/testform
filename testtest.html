@@ -59,12 +59,20 @@
         button:hover {
             background-color: #2980b9;
         }
-        .ttp-entry, .objective-entry, .observable-entry, .sub-narrative-entry, .recommendation-entry {
+        .ttp-entry, .objective-entry, .observable-entry, .sub-narrative-entry, .recommendation-entry, .meta-narrative-entry {
             margin-bottom: 15px;
             padding: 10px;
             border: 1px solid #eee;
             border-radius: 4px;
             background-color: #fff;
+        }
+        .meta-narrative-entry {
+            border: 2px solid #3498db;
+            background-color: #f8f9fa;
+        }
+        .sub-narrative-entry {
+            margin-left: 20px;
+            border-left: 3px solid #2ecc71;
         }
         .add-button {
             background-color: #2ecc71;
@@ -181,6 +189,18 @@
         #pdf-output {
             display: none;
         }
+        .narrative-controls {
+            margin-bottom: 10px;
+        }
+        .meta-narrative-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .sub-narrative-container {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -289,16 +309,27 @@
 
             <div class="section">
                 <h2>Narrative</h2>
-                <label for="metaNarrative">Meta Narrative:</label>
-                <textarea id="metaNarrative" name="metaNarrative" placeholder="Describe the overall narrative..."></textarea>
+                <div class="narrative-controls">
+                    <button type="button" class="add-button" onclick="addMetaNarrative()">Add Meta Narrative</button>
+                    <p class="help-text">Maximum 4 meta narratives, each with up to 3 sub-narratives</p>
+                </div>
 
-                <div id="subNarratives-container">
-                    <div class="sub-narrative-entry">
-                        <label>Sub-Narrative 1:</label>
-                        <textarea class="sub-narrative-text" name="sub-narrative-text" placeholder="Enter sub-narrative 1..."></textarea>
+                <div id="metaNarratives-container">
+                    <div class="meta-narrative-entry" data-meta-id="1">
+                        <div class="meta-narrative-header">
+                            <label><strong>Meta Narrative 1:</strong></label>
+                        </div>
+                        <textarea class="meta-narrative-text" name="meta-narrative-text" placeholder="Describe the meta narrative..."></textarea>
+                        
+                        <div class="sub-narrative-container">
+                            <div class="sub-narrative-entry" data-sub-id="1">
+                                <label>Sub-Narrative 1:</label>
+                                <textarea class="sub-narrative-text" name="sub-narrative-text" data-meta-parent="1" placeholder="Enter sub-narrative 1..."></textarea>
+                            </div>
+                        </div>
+                        <button type="button" class="add-button" onclick="addSubNarrative(this)">Add Sub-Narrative</button>
                     </div>
                 </div>
-                <button type="button" class="add-button" onclick="addSubNarrative()">Add Sub-Narrative</button>
             </div>
 
             <div class="section">
@@ -400,17 +431,11 @@
         </form>
 
     <script>
-
-
-
-
-
-
         // Define globally to access across the script
         let objectivesList = [];
         let ttpsList = [];
         let navigatorFileUploaded = false; // Track if the navigator file was uploaded successfully
-
+        let metaNarrativeCount = 1; // Track meta narrative count
 
        async function handleUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -418,8 +443,6 @@
     const editToken = urlParams.get('editToken');
     
     if (userEmail && editToken) {
-
-
 
 const appsScriptUrl1 = "https://script.google.com/macros/s/AKfycbwkFflwWmDtUNDou8AdZ_9tWVsC5WbVoKBvq92tdJHj30baNSIRXIwxQ1xvkEN88zOauw/exec";
 
@@ -449,18 +472,9 @@ console.log("eeend1");
     }
 }
 
-
-
-
-
-
-
-
-
-
-
 // Call this when the page loads
 window.addEventListener('load', handleUrlParameters);
+
         // Tab functionality (no change needed here for form submission)
         function openTab(evt, tabName) {
             var i, tabContent, tabButtons;
@@ -481,6 +495,101 @@ window.addEventListener('load', handleUrlParameters);
             if (tabName === "preview-tab") {
                 // generatePreview(); // Keep if you re-enable the preview tab
             }
+        }
+
+        // Add Meta Narrative field
+        function addMetaNarrative() {
+            if (metaNarrativeCount >= 4) {
+                alert("Maximum 4 meta narratives allowed");
+                return;
+            }
+
+            metaNarrativeCount++;
+            const container = document.getElementById("metaNarratives-container");
+            const newMetaNarrative = document.createElement("div");
+            newMetaNarrative.className = "meta-narrative-entry";
+            newMetaNarrative.setAttribute("data-meta-id", metaNarrativeCount);
+            newMetaNarrative.innerHTML = `
+                <div class="meta-narrative-header">
+                    <label><strong>Meta Narrative ${metaNarrativeCount}:</strong></label>
+                    <button type="button" class="remove-button" onclick="removeMetaNarrative(this)">Remove</button>
+                </div>
+                <textarea class="meta-narrative-text" name="meta-narrative-text" placeholder="Describe the meta narrative..."></textarea>
+                
+                <div class="sub-narrative-container">
+                    <div class="sub-narrative-entry" data-sub-id="1">
+                        <label>Sub-Narrative 1:</label>
+                        <textarea class="sub-narrative-text" name="sub-narrative-text" data-meta-parent="${metaNarrativeCount}" placeholder="Enter sub-narrative 1..."></textarea>
+                    </div>
+                </div>
+                <button type="button" class="add-button" onclick="addSubNarrative(this)">Add Sub-Narrative</button>
+            `;
+            container.appendChild(newMetaNarrative);
+        }
+
+        // Remove Meta Narrative field
+        function removeMetaNarrative(button) {
+            const entry = button.closest('.meta-narrative-entry');
+            entry.parentNode.removeChild(entry);
+            metaNarrativeCount--;
+
+            // Renumber remaining meta narratives
+            const metaNarrativeEntries = document.querySelectorAll("#metaNarratives-container .meta-narrative-entry");
+            metaNarrativeEntries.forEach((entry, index) => {
+                const newId = index + 1;
+                entry.setAttribute("data-meta-id", newId);
+                const label = entry.querySelector(".meta-narrative-header label");
+                label.innerHTML = `<strong>Meta Narrative ${newId}:</strong>`;
+                
+                // Update sub-narrative parent references
+                const subNarratives = entry.querySelectorAll(".sub-narrative-text");
+                subNarratives.forEach(sub => {
+                    sub.setAttribute("data-meta-parent", newId);
+                });
+            });
+        }
+
+        // Add Sub-Narrative field to a specific meta narrative
+        function addSubNarrative(button) {
+            const metaNarrativeEntry = button.closest('.meta-narrative-entry');
+            const metaId = metaNarrativeEntry.getAttribute('data-meta-id');
+            const subContainer = metaNarrativeEntry.querySelector('.sub-narrative-container');
+            const existingSubNarratives = subContainer.querySelectorAll('.sub-narrative-entry');
+            
+            if (existingSubNarratives.length >= 3) {
+                alert("Maximum 3 sub-narratives per meta narrative allowed");
+                return;
+            }
+
+            const newSubId = existingSubNarratives.length + 1;
+            const newSubNarrative = document.createElement("div");
+            newSubNarrative.className = "sub-narrative-entry";
+            newSubNarrative.setAttribute("data-sub-id", newSubId);
+            newSubNarrative.innerHTML = `
+                <label>Sub-Narrative ${newSubId}:</label>
+                <textarea class="sub-narrative-text" name="sub-narrative-text" data-meta-parent="${metaId}" placeholder="Enter sub-narrative ${newSubId}..."></textarea>
+                <button type="button" class="remove-button" onclick="removeSubNarrative(this)">Remove</button>
+            `;
+            subContainer.appendChild(newSubNarrative);
+        }
+
+        // Remove Sub-Narrative field
+        function removeSubNarrative(button) {
+            const entry = button.closest('.sub-narrative-entry');
+            const subContainer = entry.parentNode;
+            entry.remove();
+
+            // Renumber remaining sub-narratives in this meta narrative
+            const remainingSubNarratives = subContainer.querySelectorAll('.sub-narrative-entry');
+            remainingSubNarratives.forEach((subEntry, index) => {
+                const newSubId = index + 1;
+                subEntry.setAttribute("data-sub-id", newSubId);
+                const label = subEntry.querySelector("label");
+                label.textContent = `Sub-Narrative ${newSubId}:`;
+                
+                const textarea = subEntry.querySelector("textarea");
+                textarea.placeholder = `Enter sub-narrative ${newSubId}...`;
+            });
         }
 
         // Add TTP field
@@ -514,34 +623,6 @@ window.addEventListener('load', handleUrlParameters);
             for (let i = 0; i < ttpEntries.length; i++) {
                 const label = ttpEntries[i].querySelector("label");
                 label.textContent = `TTP ${i + 1}:`;
-            }
-        }
-
-        // Add Sub-Narrative field
-        let subNarrativeCount = 1; // Correct initial count to align with label for 1st
-        function addSubNarrative() {
-            subNarrativeCount++; // Increment before creating to get correct new label
-            const container = document.getElementById("subNarratives-container");
-            const newSubNarrative = document.createElement("div");
-            newSubNarrative.className = "sub-narrative-entry";
-            newSubNarrative.innerHTML = `
-                <label>Sub-Narrative ${subNarrativeCount}:</label>
-                <textarea class="sub-narrative-text" name="sub-narrative-text" placeholder="Enter sub-narrative ${subNarrativeCount}..."></textarea>
-                <button type="button" class="remove-button" onclick="removeSubNarrative(this)">Remove</button>
-            `;
-            container.appendChild(newSubNarrative);
-        }
-
-        // Remove Sub-Narrative field
-        function removeSubNarrative(button) {
-            const entry = button.parentNode;
-            entry.parentNode.removeChild(entry);
-            subNarrativeCount--;
-
-            const subNarrativeEntries = document.querySelectorAll("#subNarratives-container .sub-narrative-entry");
-            for (let i = 0; i < subNarrativeEntries.length; i++) {
-                const label = subNarrativeEntries[i].querySelector("label");
-                label.textContent = `Sub-Narrative ${i + 1}:`;
             }
         }
 
@@ -635,15 +716,25 @@ window.addEventListener('load', handleUrlParameters);
 
         // Helper function to reset dynamic fields after submission
         function resetDynamicFields() {
-            // Reset Sub-Narratives
-            const subNarrativesContainer = document.getElementById('subNarratives-container');
-            subNarrativesContainer.innerHTML = `
-                <div class="sub-narrative-entry">
-                    <label>Sub-Narrative 1:</label>
-                    <textarea class="sub-narrative-text" name="sub-narrative-text" placeholder="Enter sub-narrative 1..."></textarea>
+            // Reset Meta Narratives
+            const metaNarrativesContainer = document.getElementById('metaNarratives-container');
+            metaNarrativesContainer.innerHTML = `
+                <div class="meta-narrative-entry" data-meta-id="1">
+                    <div class="meta-narrative-header">
+                        <label><strong>Meta Narrative 1:</strong></label>
+                    </div>
+                    <textarea class="meta-narrative-text" name="meta-narrative-text" placeholder="Describe the meta narrative..."></textarea>
+                    
+                    <div class="sub-narrative-container">
+                        <div class="sub-narrative-entry" data-sub-id="1">
+                            <label>Sub-Narrative 1:</label>
+                            <textarea class="sub-narrative-text" name="sub-narrative-text" data-meta-parent="1" placeholder="Enter sub-narrative 1..."></textarea>
+                        </div>
+                    </div>
+                    <button type="button" class="add-button" onclick="addSubNarrative(this)">Add Sub-Narrative</button>
                 </div>
             `;
-            subNarrativeCount = 1; // Reset counter
+            metaNarrativeCount = 1; // Reset counter
 
             // Reset TTPs
             const ttpsContainer = document.getElementById('ttps-container');
@@ -699,13 +790,6 @@ window.addEventListener('load', handleUrlParameters);
                     <label>Objective 2:</label>
                     <input type="text" class="objective-title" name="objective-title" placeholder="Title of objective" value="">
                     <textarea class="objective-justification" name="objective-justification" placeholder="Justification"></textarea>
-                </div>
-            `;
-            document.getElementById('ttps-container').innerHTML = `
-                <div class="ttp-entry">
-                    <label>TTP 1:</label>
-                    <input type="text" class="ttp-title" name="ttp-title" placeholder="Title of TTP">
-                    <textarea class="ttp-explanation" name="ttp-explanation" placeholder="Explanation"></textarea>
                 </div>
             `;
             objectivesList = []; // Clear the global lists from Navigator upload
@@ -804,7 +888,7 @@ window.addEventListener('load', handleUrlParameters);
         }
 
 
-        // Dummy functions for now, original code probably had these
+        // DOCX generation function - Updated to handle multiple meta narratives
         function downloadAsDocx() {
             console.log("Starting the DOCX generation process...");
 
@@ -817,14 +901,25 @@ window.addEventListener('load', handleUrlParameters);
                 const date = document.getElementById("date").value || "28/06/2024";
                 const summary = document.getElementById("summary").value || "- Summary of incident - 1-2 sentences\n- Summary of narrative - 1 sentence\n- Summary of impact\n- Summary of DISARM TTPs\n- Summary of recommendations.";
                 const incident = document.getElementById("incident").value || "Describe the scope of what you found.";
-                const metaNarrative = document.getElementById("metaNarrative").value || "Meta narrative: Degradation of the West; Technological progress endangers public safety.";
-                const subNarrativeEntries = document.querySelectorAll(".sub-narrative-text");
-                let subNarratives = Array.from(subNarrativeEntries)
-                    .map((entry, index) => entry.value || `Sub-Narrative ${index + 1}: [No content provided]`)
-                    .join("\n");
+                
+                // Collect all meta narratives and their sub-narratives
+                const metaNarrativeEntries = document.querySelectorAll(".meta-narrative-entry");
+                let narrativeText = "";
+                
+                metaNarrativeEntries.forEach((metaEntry, metaIndex) => {
+                    const metaText = metaEntry.querySelector(".meta-narrative-text").value || `Meta Narrative ${metaIndex + 1}: [No content provided]`;
+                    narrativeText += `Meta-narrative ${metaIndex + 1}: ${metaText}\n`;
+                    
+                    const subNarratives = metaEntry.querySelectorAll(".sub-narrative-text");
+                    subNarratives.forEach((subEntry, subIndex) => {
+                        const subText = subEntry.value || `Sub-Narrative ${subIndex + 1}: [No content provided]`;
+                        narrativeText += `  Sub-Narrative ${subIndex + 1}: ${subText}\n`;
+                    });
+                    narrativeText += "\n";
+                });
 
-                const subNarrativeTextRuns = subNarratives.split("\n").map(line => new docx.TextRun({ break: 1, text: line }));
-                const subNarrativeParagraph = new docx.Paragraph({ children: subNarrativeTextRuns });
+                const narrativeTextRuns = narrativeText.split("\n").map(line => new docx.TextRun({ break: 1, text: line }));
+                const narrativeParagraph = new docx.Paragraph({ children: narrativeTextRuns });
 
                 const reach = document.getElementById("reach").value || "";
                 const outcome = document.getElementById("outcome").value || "";
@@ -1117,7 +1212,7 @@ window.addEventListener('load', handleUrlParameters);
                     ],
                 });
 
-                // Narrative table
+                // Narrative table (updated to handle multiple meta narratives)
                 const narrativeTable = new docx.Table({
                     width: { size: 100, type: docx.WidthType.PERCENTAGE },
                     borders: noBorders,
@@ -1150,18 +1245,7 @@ window.addEventListener('load', handleUrlParameters);
                                     columnSpan: 3,
                                     borders: noBorders,
                                     margins: { top: 0, bottom: 0, left: 0, right: 0 },
-                                    children: [
-                                        new docx.Paragraph({
-                                            children: [
-                                                new docx.TextRun({
-                                                    text: `Meta-narrative: ${metaNarrative}`,
-                                                    font: "Times New Roman",
-                                                    size: 22,
-                                                }),
-                                            ],
-                                        }),
-                                        subNarrativeParagraph,
-                                    ],
+                                    children: [narrativeParagraph],
                                 }),
                             ],
                         }),
